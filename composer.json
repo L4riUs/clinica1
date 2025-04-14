@@ -1,0 +1,12 @@
+{
+    "name": "proyecto/clinica",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Proyecto\\Clinica\\": "src/"
+        }
+    },
+    "minimum-stability": "beta",
+    "require": {}
+}
