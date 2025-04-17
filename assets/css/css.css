@@ -1,0 +1,144 @@
+* {
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.contenido {
+    width: calc(100% - 230px);
+    margin-left: 230px;
+    transition: 300ms;
+}
+.content-uncollapse {
+    width: calc(100% - 90px);
+    margin-left: 90px;
+    transition: 300ms;
+}
+
+.header {
+    width: 230px;
+    height: 100%;
+    transition: 300ms;
+    overflow: auto;
+    position: fixed;
+    scrollbar-width: none;
+    top: 0;
+    left: 0;
+    z-index: 99998;
+    background: #1775F1;
+    img {
+        width: 100%;
+        /* height: 150px; */
+        background-color: white;
+    }
+    ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: start;
+
+        li {
+            padding: 0 10px;
+            margin: 5px 0;
+            width: 100%;
+
+            svg {
+                width: 20px;
+                margin-right: 10px;
+                min-width: 20px;
+                transition: inherit;
+            }
+
+            p {
+                font-size: 16px;
+                color: white;
+            }
+
+            a {
+                text-decoration: none;
+                color: white;
+                padding: 10px;
+                margin: 0 10px;
+                text-align: center;
+                border-radius: 10px;
+                transition: 300ms;
+                align-items: center;
+                display: flex;
+
+                &:hover {
+                    background-color: blue;
+                }
+            }
+        }
+    }
+    
+}
+
+.content {
+    width: 100%;
+    height: 100%;
+    float: left;
+}
+
+.collapse {
+    width: 90px;
+    transition: 300ms;
+
+    & ul li a p {
+        display: none;
+    }
+    & ul li a svg {
+        min-width: 30px;
+        width: 30px;
+        transition: 300ms;
+    }
+
+}
+
+.header.collapse:hover {
+    width: 230px;
+    & ul li a p {
+        display: block;
+    }
+    & ul li a svg {
+        min-width: 20px;
+        width: 20px;
+        transition: 300ms;
+    }
+
+}
+
+.rotate180 {
+    transform: rotate(180deg);
+    transition: 300ms; 
+}
+
+
+.titulo-cabezera{
+    font-size: medium;
+    font-family: sans-serif;
+    margin: 5px;
+    padding: 5px;
+    display: flex;
+    flex-wrap: wrap;
+
+}
+
+#header-collapse {
+    cursor: pointer;
+    font-weight: bolder;
+    margin: 10px;
+    transition: 300ms;
+}

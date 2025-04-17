@@ -1,0 +1,53 @@
+
+body {
+    background-image: url("../img/dig.png");
+    background-size: cover;
+    background-repeat: no-repeat;
+    font-family: Arial, Helvetica, sans-serif;
+    height: 90vh;
+    display: block;
+}
+#login {
+    height: 100%;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: end;
+    margin: 20px;
+}
+
+#login form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 27, 36, 0.37);
+    padding: 20px;
+    border-radius: 5px;
+    width: 40%;
+    min-width: 310px;
+}
+
+#login form img {
+    width: 80%;
+    border-radius: 20%;
+}
+
+#login form label {
+    margin-bottom: 10px;
+}
+
+#login form input {
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: none;
+    outline: none;
+    width: 90%;
+}
+
+#login form input[type="submit"] {
+    padding: 10px;
+    cursor: pointer;
+}

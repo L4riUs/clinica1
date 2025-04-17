@@ -1,0 +1,70 @@
+.boton1 {
+    text-decoration: none;
+    color: black;
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px;
+    transition: 300ms;
+    cursor: pointer;
+
+    &:hover {
+        background-color: lightblue;
+    }
+}
+
+/* boton de aceptar con fondo verde */
+.boton-aceptar {
+    background-color: green;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.boton-aceptar:hover {
+    background-color: darkgreen;
+}
+
+/* boton de cancelar con fondo rojo */
+.boton-cancelar {
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.boton-cancelar:hover {
+    background-color: darkred;
+}
+
+/* boton de crear nuevo */
+.boton-crear {
+    background-color: royalblue;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+}
+
+.boton-crear:hover {
+    background-color: darkgreen;
+}

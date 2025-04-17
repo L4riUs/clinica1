@@ -1,0 +1,36 @@
+
+table {
+    width: 95%;
+    margin: auto;
+    border-collapse: collapse;
+    background: #f6f8f8;
+    position: relative;
+    align-items: center;   
+    table-layout: fixed;
+    border-radius: 5px;
+    font-family: sans-serif;
+    text-align: center;
+}
+
+thead {
+    text-align: center;
+    background-color: #0363ffb3;
+    text-transform: uppercase;
+    
+    tr th {
+        padding: 10px 0;
+    }
+}
+
+table tbody tr td {
+    padding: 10px;
+    &:last-child {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        
+    }
+}
+#formInsumo input {
+    margin: 10px 0;
+}
