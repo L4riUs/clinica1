@@ -1,7 +1,9 @@
 <?php
+
 namespace Proyecto\Clinica\Controller;
+
 use Proyecto\Clinica\Models\Insumos;
-   
+
 class C_Insumos
 {
     public function Index()
@@ -10,7 +12,8 @@ class C_Insumos
         $descripcion = "Esta es la pagina de insumos";
         include_once __DIR__ . '/../Views/V_Insumos.php';
     }
-    public function BuscarInsumos(){
+    public function BuscarInsumos()
+    {
         $clase = new Insumos();
         if (isset($_GET["id"])) {
             $insumos = $clase->setId($_GET["id"]);
@@ -18,5 +21,9 @@ class C_Insumos
         $insumos = $clase->getInsumos();
         echo json_encode($insumos);
     }
+
+    public function GuardarInsumos()
+    {
+        
+    }
 }
-?>
