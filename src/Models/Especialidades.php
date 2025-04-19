@@ -1,74 +1,86 @@
 <?php
-    # Esta es la clase de especialidades
-    # Se conecta a la base de datos
-
-    class Especialidad extends Conexion{
-
+    namespace Proyecto\Clinica\Models;
+    class Especialidades extends Conexion {
         private $id;
         private $nombre;
+        private $estado;
 
-        function __construct($id=null,$nombre=null){
+        function __construct($id = null, $nombre = null, $estado = null) {
             parent::__construct();
 
             $this->id = $id;
             $this->nombre = $nombre;
+            $this->estado = $estado;
         }
 
-        public function getId(){
+        // getters
+        public function getId() {
             return $this->id;
         }
 
-        public function getNombre(){
+        public function getNombre() {
             return $this->nombre;
         }
 
-        public function setId($id){
+        public function getEstado() {
+            return $this->estado;
+        }
+
+        // setters
+        public function setId($id) {
             $this->id = $id;
         }
 
-        public function setNombre($nombre){
+        public function setNombre($nombre) {
             $this->nombre = $nombre;
         }
-        
-        public function insertar(){
-            $sql = "INSERT INTO especialidades (nombre) VALUES (:nombre)";
+
+        public function setEstado($estado) {
+            $this->estado = $estado;
+        }
+
+        // CRUD
+        public function insertar() {
+            $sql = "INSERT INTO especialidades (nombre, estado) VALUES (:nombre, :estado)";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(
-                ':nombre' => $this->nombre
+                ':nombre' => $this->nombre,
+                ':estado' => $this->estado
             ));
             $this->id = $this->conexion->lastInsertId();
             return $this->id;
         }
 
-        public function actualizar(){
-            $sql = "UPDATE especialidades SET nombre = :nombre WHERE id = :id";
+        public function actualizar() {
+            $sql = "UPDATE especialidades SET nombre = :nombre, estado = :estado WHERE id = :id";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(
                 ':nombre' => $this->nombre,
+                ':estado' => $this->estado,
                 ':id' => $this->id
             ));
         }
 
-        public function eliminar(){
+        public function eliminar() {
             $sql = "DELETE FROM especialidades WHERE id = :id";
             $query = $this->conexion->prepare($sql);
-            $query->execute(array(
-                ':id' => $this->id
-            ));
+            $query->execute(array(':id' => $this->id));
         }
 
-        public function getEspecialidades(){
-            $sql = "SELECT * FROM especialidades where 1";
+        public function getEspecialidades() {
+            $sql = "SELECT * FROM especialidades WHERE 1";
             if (isset($this->id)) {
                 $sql .= " AND id = :id";
             }
+
             $query = $this->conexion->prepare($sql);
             $opciones = array();
+
             if (isset($this->id)) {
                 $opciones[':id'] = $this->id;
             }
+
             $query->execute($opciones);
-            $especialidades = $query->fetchAll();
-            return $especialidades;
+            return $query->fetchAll();
         }
     }
