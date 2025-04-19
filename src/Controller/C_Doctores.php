@@ -12,7 +12,7 @@ class C_Doctores
         include_once __DIR__ . '/../Views/V_Doctores.php';
     }
 
-    public function searchDoctor()
+    public function BuscarDoctores()
     {
         $doctores = new Doctores();
         $doctores = $doctores->getDoctores();

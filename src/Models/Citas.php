@@ -86,8 +86,8 @@
                 ':fecha' => $this->fecha,
                 ':emergencia' => $this->emergencia,
             ));
-            $this->id = $this->conexion->lastInsertId();
-            return $this->id;
+            // $this->id = $this->conexion->lastInsertId();
+            // return $this->id;
         }
 
         public function actualizar(){

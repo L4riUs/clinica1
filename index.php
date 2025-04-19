@@ -10,4 +10,7 @@ if (!class_exists($controller) && !method_exists($controller, $action)) {
    $controller = "Proyecto\\Clinica\\Controller\\C_Error";
 }
 $controller = new $controller;
-call_user_func(array($controller, $action));
+
+$id = isset($_GET['id']) ? $_GET['id'] : null;
+
+call_user_func_array([$controller, $action], [$id]);

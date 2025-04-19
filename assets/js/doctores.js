@@ -87,7 +87,7 @@ function cargarEspecialidades(){
 
 function getDoctores(){
     console.log("obteniendo doctores");
-    get('?c=Doctores&a=searchDoctor', imprimirTarjetas,'GET');
+    get('?c=Doctores&a=BuscarDoctores', imprimirTarjetas,'GET');
 }
 
 function eliminarDoctor(){

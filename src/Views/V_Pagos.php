@@ -63,7 +63,7 @@
                     <label>Fecha</label>
                     <input type="date" id="fecha" name="fecha" placeholder="Fecha" required>
 
-                    <button id="btn-enviar" type="submit" onclick="crearCita()" style="display: none;">Crear</button>
+                    <button id="btn-enviar" type="submit" style="display: none;">Crear</button>
                 </form>
             </div>
             <div class="modal-footer">

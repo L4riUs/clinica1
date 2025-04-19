@@ -11,7 +11,7 @@ function abrir_modal_form_create(){
     document.getElementById('precio').value = ''
     document.getElementById('fecha').value = ''
     document.getElementById('emergencia').value = "false"
-    document.getElementById('formCita').attributes.action.value = 'Controller/add/add_cita.php';
+    document.getElementById('formCita').attributes.action.value = '?c=Citas&a=CrearCita';
     document.getElementById('btn-enviar-label').textContent = 'Crear';
     window.location = '#modalcita';
 }
@@ -24,7 +24,7 @@ function abrir_modal_delete(id,name){
 }
 
 function abrir_modal_form_edit(id){
-    get('Controller/get/get_citas.php?id='+id, (data) => {
+    get(`?c=Citas&a=BuscarCitas&id=${id}`, (data) => {
         data = data[0];
         document.getElementById('id').value = data['id']
         document.getElementById('id_paciente').value = data['id_paciente']
@@ -69,7 +69,7 @@ function imprimirTabla(data) {
 }
 
 function cargarDoctores(){
-    get('Controller/get/get_doctores.php', (data) => {
+    get('?c=Doctores&a=BuscarDoctores', (data) => {
         doctores_list.innerHTML = '<option disabled selected>Seleccione el doctor</option>';
         data.forEach(row => {
             doctores_list.innerHTML += `
@@ -79,7 +79,7 @@ function cargarDoctores(){
     },'GET');
 }
 function cargarPacientes(){
-    get('Controller/get/get_pacientes.php', (data) => {
+    get('?c=Pacientes&a=BuscarPacientes', (data) => {
         pacientes_list.innerHTML = '<option disabled selected>Seleccione el paciente</option>';
         data.forEach(row => {
             pacientes_list.innerHTML += `
@@ -98,9 +98,9 @@ function eliminarCita(){
     post('Controller/del/del_cita.php', getCitas, 'POST', 'id='+cita_id);
 }
 
-function crearCita(){
-    post('Controller/post/add_cita.php', getCitas, 'POST', 'id_paciente='+document.getElementById('id_paciente').value+'&id_doctor='+document.getElementById('id_doctor').value+'&motivo='+document.getElementById('motivo').value+'&precio='+document.getElementById('precio').value+'&fecha='+document.getElementById('fecha').value);
-}
+// function crearCita(){
+//     post('?c=Citas&a=CrearCita', getCitas, 'POST', 'id_paciente='+document.getElementById('id_paciente').value+'&id_doctor='+document.getElementById('id_doctor').value+'&motivo='+document.getElementById('motivo').value+'&precio='+document.getElementById('precio').value+'&fecha='+document.getElementById('fecha').value);
+// }
 
 cargarDoctores();
 cargarPacientes();
