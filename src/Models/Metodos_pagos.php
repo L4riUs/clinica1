@@ -1,7 +1,7 @@
 <?php
-    # Esta es la clase de metodos de pago
-
-    class MetodoPago extends conexion{
+    namespace Proyecto\Clinica\Models;
+    use Proyecto\Clinica\Models\conexion;
+    class Metodos_Pagos extends Conexion{
 
         private $id;
         private $nombre;
@@ -49,7 +49,7 @@
         }
 
         public function eliminar(){
-            $sql = "DELETE FROM metodo_pago WHERE id = :id";
+            $sql = "UPDATE metodo_pago SET estado = 0 WHERE id = :id";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(
                 ':id' => $this->id
@@ -61,7 +61,7 @@
             metodo_pago.id, 
             metodo_pago.nombre
             FROM metodo_pago 
-             where 1";
+            where 1";
             if (isset($this->id)) {
                 $sql .= " AND metodo_pago.id = :id";
             }

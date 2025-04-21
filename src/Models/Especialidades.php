@@ -62,7 +62,7 @@
         }
 
         public function eliminar() {
-            $sql = "DELETE FROM especialidades WHERE id = :id";
+            $sql = "UPDATE especialidades SET estado = 0 WHERE id = :id";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(':id' => $this->id));
         }

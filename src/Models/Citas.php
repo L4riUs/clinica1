@@ -1,7 +1,138 @@
 <?php
     namespace Proyecto\Clinica\Models;
+    class Citas extends Conexion {
+    
+        private $id;
+        private $id_servicio_medico;
+        private $id_paciente;
+        private $fecha;
+        private $hora;
+        private $estado;
+    
+        function __construct($id = null, $id_servicio_medico = null, $id_paciente = null, $fecha = null, $hora = null, $estado = null) {
+            parent::__construct();
+    
+            $this->id = $id;
+            $this->id_servicio_medico = $id_servicio_medico;
+            $this->id_paciente = $id_paciente;
+            $this->fecha = $fecha;
+            $this->hora = $hora;
+            $this->estado = $estado;
+        }
+    
+        // getters
+        public function getId() {
+            return $this->id;
+        }
+    
+        public function getIdServicioMedico() {
+            return $this->id_servicio_medico;
+        }
+    
+        public function getIdPaciente() {
+            return $this->id_paciente;
+        }
+    
+        public function getFecha() {
+            return $this->fecha;
+        }
+    
+        public function getHora() {
+            return $this->hora;
+        }
+    
+        public function getEstado() {
+            return $this->estado;
+        }
+    
+        // setters
+        public function setId($id) {
+            $this->id = $id;
+        }
+    
+        public function setIdServicioMedico($id_servicio_medico) {
+            $this->id_servicio_medico = $id_servicio_medico;
+        }
+    
+        public function setIdPaciente($id_paciente) {
+            $this->id_paciente = $id_paciente;
+        }
+    
+        public function setFecha($fecha) {
+            $this->fecha = $fecha;
+        }
+    
+        public function setHora($hora) {
+            $this->hora = $hora;
+        }
+    
+        public function setEstado($estado) {
+            $this->estado = $estado;
+        }
+    
+        // CRUD
+        public function insertar() {
+            $sql = "INSERT INTO citas (id_servicio_medico, id_paciente, fecha, hora, estado) 
+                    VALUES (:id_servicio_medico, :id_paciente, :fecha, :hora, :estado)";
+            $query = $this->conexion->prepare($sql);
+            $query->execute(array(
+                ':id_servicio_medico' => $this->id_servicio_medico,
+                ':id_paciente' => $this->id_paciente,
+                ':fecha' => $this->fecha,
+                ':hora' => $this->hora,
+                ':estado' => $this->estado
+            ));
+            // $this->id = $this->conexion->lastInsertId();
+            // return $this->id;
+        }
+    
+        public function actualizar() {
+            $sql = "UPDATE citas 
+                    SET id_servicio_medico = :id_servicio_medico, id_paciente = :id_paciente, fecha = :fecha, hora = :hora, estado = :estado 
+                    WHERE id = :id";
+            $query = $this->conexion->prepare($sql);
+            $query->execute(array(
+                ':id_servicio_medico' => $this->id_servicio_medico,
+                ':id_paciente' => $this->id_paciente,
+                ':fecha' => $this->fecha,
+                ':hora' => $this->hora,
+                ':estado' => $this->estado,
+                ':id' => $this->id
+            ));
+        }
+        public function eliminar() {
+            $sql = "UPDATE citas SET estado = 0 WHERE id = :id";
+            $query = $this->conexion->prepare($sql);
+            $query->execute(array(':id' => $this->id));
+        }
+        
+        public function getCitas() {
+            $sql = "SELECT 
+                        citas.*, 
+                        paciente.nombre AS paciente,
+                        servicios.nombre AS servicio
+                    FROM citas 
+                    INNER JOIN paciente ON citas.id_paciente = paciente.id 
+                    INNER JOIN servicios ON citas.id_servicio_medico = servicios.id 
+                    WHERE 1";
+    
+            if (isset($this->id)) {
+                $sql .= " AND citas.id = :id";
+            }
+    
+            $query = $this->conexion->prepare($sql);
+            $opciones = array();
+    
+            if (isset($this->id)) {
+                $opciones[':id'] = $this->id;
+            }
+    
+            $query->execute($opciones);
+            return $query->fetchAll();
+        }
+    }
 
-    // class Citas extends conexion{
+        // class Citas extends conexion{
 
     //     private $id;
     //     private $id_paciente;
@@ -139,137 +270,6 @@
     //         return $citas;
     //     }
     // }
-    class Citas extends Conexion {
-    
-        private $id;
-        private $id_servicio_medico;
-        private $id_paciente;
-        private $fecha;
-        private $hora;
-        private $estado;
-    
-        function __construct($id = null, $id_servicio_medico = null, $id_paciente = null, $fecha = null, $hora = null, $estado = null) {
-            parent::__construct();
-    
-            $this->id = $id;
-            $this->id_servicio_medico = $id_servicio_medico;
-            $this->id_paciente = $id_paciente;
-            $this->fecha = $fecha;
-            $this->hora = $hora;
-            $this->estado = $estado;
-        }
-    
-        // getters
-        public function getId() {
-            return $this->id;
-        }
-    
-        public function getIdServicioMedico() {
-            return $this->id_servicio_medico;
-        }
-    
-        public function getIdPaciente() {
-            return $this->id_paciente;
-        }
-    
-        public function getFecha() {
-            return $this->fecha;
-        }
-    
-        public function getHora() {
-            return $this->hora;
-        }
-    
-        public function getEstado() {
-            return $this->estado;
-        }
-    
-        // setters
-        public function setId($id) {
-            $this->id = $id;
-        }
-    
-        public function setIdServicioMedico($id_servicio_medico) {
-            $this->id_servicio_medico = $id_servicio_medico;
-        }
-    
-        public function setIdPaciente($id_paciente) {
-            $this->id_paciente = $id_paciente;
-        }
-    
-        public function setFecha($fecha) {
-            $this->fecha = $fecha;
-        }
-    
-        public function setHora($hora) {
-            $this->hora = $hora;
-        }
-    
-        public function setEstado($estado) {
-            $this->estado = $estado;
-        }
-    
-        // CRUD
-        public function insertar() {
-            $sql = "INSERT INTO citas (id_servicio_medico, id_paciente, fecha, hora, estado) 
-                    VALUES (:id_servicio_medico, :id_paciente, :fecha, :hora, :estado)";
-            $query = $this->conexion->prepare($sql);
-            $query->execute(array(
-                ':id_servicio_medico' => $this->id_servicio_medico,
-                ':id_paciente' => $this->id_paciente,
-                ':fecha' => $this->fecha,
-                ':hora' => $this->hora,
-                ':estado' => $this->estado
-            ));
-            // $this->id = $this->conexion->lastInsertId();
-            // return $this->id;
-        }
-    
-        public function actualizar() {
-            $sql = "UPDATE citas 
-                    SET id_servicio_medico = :id_servicio_medico, id_paciente = :id_paciente, fecha = :fecha, hora = :hora, estado = :estado 
-                    WHERE id = :id";
-            $query = $this->conexion->prepare($sql);
-            $query->execute(array(
-                ':id_servicio_medico' => $this->id_servicio_medico,
-                ':id_paciente' => $this->id_paciente,
-                ':fecha' => $this->fecha,
-                ':hora' => $this->hora,
-                ':estado' => $this->estado,
-                ':id' => $this->id
-            ));
-        }
-    
-        public function eliminar() {
-            $sql = "DELETE FROM citas WHERE id = :id";
-            $query = $this->conexion->prepare($sql);
-            $query->execute(array(':id' => $this->id));
-        }
-    
-        public function getCitas() {
-            $sql = "SELECT 
-                        citas.*, 
-                        paciente.nombre AS paciente,
-                        servicios.nombre AS servicio
-                    FROM citas 
-                    INNER JOIN paciente ON citas.id_paciente = paciente.id 
-                    INNER JOIN servicios ON citas.id_servicio_medico = servicios.id 
-                    WHERE 1";
-    
-            if (isset($this->id)) {
-                $sql .= " AND citas.id = :id";
-            }
-    
-            $query = $this->conexion->prepare($sql);
-            $opciones = array();
-    
-            if (isset($this->id)) {
-                $opciones[':id'] = $this->id;
-            }
-    
-            $query->execute($opciones);
-            return $query->fetchAll();
-        }
-    }
-    ?>
+
+?>
     

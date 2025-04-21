@@ -124,7 +124,7 @@
         }
 
         public function eliminar() {
-            $sql = "DELETE FROM pacientes WHERE id = :id";
+            $sql = "UPDATE pacientes SET estado = 0 WHERE id = :id";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(':id' => $this->id));
         }

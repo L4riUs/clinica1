@@ -58,9 +58,9 @@ class DetallesEntrada extends Conexion {
     }
 
     public function eliminar() {
-        $sql = "DELETE FROM detalles_entrada WHERE id = :id";
-        $stmt = $this->conexion->prepare($sql);
-        $stmt->execute([':id' => $this->id]);
+        $sql = "UPDATE detalles_entrada SET estado = 0 WHERE id = :id";
+        $query = $this->conexion->prepare($sql);
+        $query->execute(array(':id' => $this->id));
     }
 
     public function getDetalles($filtro = []) {

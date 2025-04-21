@@ -91,7 +91,7 @@ class Insumos extends Conexion {
     }
 
     public function eliminar() {
-        $sql = "DELETE FROM insumos WHERE id = :id";
+        $sql = "UPDATE insumos SET estado = 0 WHERE id = :id";
         $query = $this->conexion->prepare($sql);
         $query->execute(array(':id' => $this->id));
     }

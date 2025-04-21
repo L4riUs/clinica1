@@ -77,12 +77,6 @@
             ]);
         }
 
-        public function eliminar() {
-            $sql = "DELETE FROM pagos WHERE id = :id";
-            $query = $this->conexion->prepare($sql);
-            $query->execute([':id' => $this->id]);
-        }
-
         public function getPagos() {
             $sql = "SELECT 
                         pagos.id,

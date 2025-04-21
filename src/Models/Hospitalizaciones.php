@@ -1,7 +1,7 @@
 <?php
     namespace Proyecto\Clinica\Models;
 
-    class Hospitalizacion extends Conexion {
+    class Hospitalizaciones extends Conexion {
 
         private $id;
         private $id_control;
@@ -116,7 +116,7 @@
         }
 
         public function eliminar() {
-            $sql = "DELETE FROM hospitalizacion WHERE id = :id";
+            $sql = "UPDATE hospitalizacion SET estado = 0 WHERE id = :id";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(':id' => $this->id));
         }
