@@ -3,15 +3,15 @@ namespace Proyecto\Clinica\Models;
 
 class Patologias extends Conexion {
     private $id;
-    private $id_paciente;
     private $nombre;
+    private $estado;
 
-    function __construct($id = null, $id_paciente = null, $nombre = null) {
+    function __construct($id = null,$nombre = null, $estado = null) { 
         parent::__construct();
 
         $this->id = $id;
-        $this->id_paciente = $id_paciente;
         $this->nombre = $nombre;
+        $this->estado = $estado;
     }
 
     // getters
@@ -19,8 +19,8 @@ class Patologias extends Conexion {
         return $this->id;
     }
 
-    public function getIdPaciente() {
-        return $this->id_paciente;
+    public function getIdEstado() {
+        return $this->estado;
     }
 
     public function getNombre() {
@@ -32,8 +32,8 @@ class Patologias extends Conexion {
         $this->id = $id;
     }
 
-    public function setIdPaciente($id_paciente) {
-        $this->id_paciente = $id_paciente;
+    public function setIdEstado($estado) {
+        $this->estado = $estado;
     }
 
     public function setNombre($nombre) {
@@ -42,34 +42,34 @@ class Patologias extends Conexion {
 
     // CRUD
     public function insertar() {
-        $sql = "INSERT INTO patologias (id_paciente, nombre) VALUES (:id_paciente, :nombre)";
+        $sql = "INSERT INTO patologias (id, nombre,estado) VALUES (:id, :nombre, :estado)";
         $query = $this->conexion->prepare($sql);
         $query->execute(array(
-            ':id_paciente' => $this->id_paciente,
-            ':nombre' => $this->nombre
+            ':nombre' => $this->nombre,
+            ':estado' => $this->estado
         ));
         $this->id = $this->conexion->lastInsertId();
         return $this->id;
     }
 
     public function actualizar() {
-        $sql = "UPDATE patologias SET id_paciente = :id_paciente, nombre = :nombre WHERE id = :id";
+        $sql = "UPDATE patologias SET estado = :estado, nombre = :nombre WHERE id = :id";
         $query = $this->conexion->prepare($sql);
         $query->execute(array(
-            ':id_paciente' => $this->id_paciente,
+            ':estado' => $this->estado,
             ':nombre' => $this->nombre,
             ':id' => $this->id
         ));
     }
 
     public function eliminar() {
-        $sql = "DELETE FROM patologias WHERE id = :id";
+        $sql = "UPDATE patologias SET estado = 0 WHERE id = :id";
         $query = $this->conexion->prepare($sql);
         $query->execute(array(':id' => $this->id));
     }
 
     public function getPatologias() {
-        $sql = "SELECT * FROM patologias WHERE 1";
+        $sql = "SELECT * FROM patologias WHERE 1=1";
         $opciones = array();
 
         if (isset($this->id)) {
@@ -77,9 +77,9 @@ class Patologias extends Conexion {
             $opciones[':id'] = $this->id;
         }
 
-        if (isset($this->id_paciente)) {
-            $sql .= " AND id_paciente = :id_paciente";
-            $opciones[':id_paciente'] = $this->id_paciente;
+        if (isset($this->estado)) {
+            $sql .= " AND estado = :estado";
+            $opciones[':estado'] = $this->estado;
         }
 
         $query = $this->conexion->prepare($sql);

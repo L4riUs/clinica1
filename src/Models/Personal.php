@@ -4,17 +4,15 @@
     class Personal extends Conexion {
 
         private $id;
-        private $id_especialidad;
         private $cedula;
         private $nombre;
         private $apellido;
         private $telefono;
 
-        function __construct($id = null, $id_especialidad = null, $cedula = null, $nombre = null, $apellido = null, $telefono = null) {
+        function __construct($id = null, $cedula = null, $nombre = null, $apellido = null, $telefono = null) {
             parent::__construct();
 
             $this->id = $id;
-            $this->id_especialidad = $id_especialidad;
             $this->cedula = $cedula;
             $this->nombre = $nombre;
             $this->apellido = $apellido;
@@ -24,10 +22,6 @@
         // getters
         public function getId() {
             return $this->id;
-        }
-
-        public function getIdEspecialidad() {
-            return $this->id_especialidad;
         }
 
         public function getCedula() {
@@ -51,10 +45,6 @@
             $this->id = $id;
         }
 
-        public function setIdEspecialidad($id_especialidad) {
-            $this->id_especialidad = $id_especialidad;
-        }
-
         public function setCedula($cedula) {
             $this->cedula = $cedula;
         }
@@ -73,11 +63,10 @@
 
         // CRUD
         public function insertar() {
-            $sql = "INSERT INTO personal (id_especialidad, cedula, nombre, apellido, telefono) 
-                    VALUES (:id_especialidad, :cedula, :nombre, :apellido, :telefono)";
+            $sql = "INSERT INTO personal ( cedula, nombre, apellido, telefono) 
+                    VALUES (:cedula, :nombre, :apellido, :telefono)";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(
-                ':id_especialidad' => $this->id_especialidad,
                 ':cedula' => $this->cedula,
                 ':nombre' => $this->nombre,
                 ':apellido' => $this->apellido,
@@ -89,11 +78,10 @@
 
         public function actualizar() {
             $sql = "UPDATE personal 
-                    SET id_especialidad = :id_especialidad, cedula = :cedula, nombre = :nombre, apellido = :apellido, telefono = :telefono 
+                    SET cedula = :cedula, nombre = :nombre, apellido = :apellido, telefono = :telefono 
                     WHERE id = :id";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(
-                ':id_especialidad' => $this->id_especialidad,
                 ':cedula' => $this->cedula,
                 ':nombre' => $this->nombre,
                 ':apellido' => $this->apellido,
@@ -114,13 +102,15 @@
                         personal.nombre, 
                         personal.apellido, 
                         personal.cedula, 
-                        personal.telefono, 
-                        (SELECT nombre FROM especialidades WHERE especialidades.id = personal.id_especialidad) as especialidad 
+                        personal.telefono
                     FROM personal 
-                    WHERE 1";
-
+                    WHERE 1=1";
             if (isset($this->id)) {
                 $sql .= " AND personal.id = :id";
+            }
+
+            if (isset($this->cedula)) {
+                $sql .= " AND personal.cedula = :cedula";
             }
 
             $query = $this->conexion->prepare($sql);
