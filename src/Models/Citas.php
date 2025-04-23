@@ -112,8 +112,6 @@
                 ':emergencia' => $this->emergencia,
                 ':estado' => $this->estado
             ));
-            // $this->id = $this->conexion->lastInsertId();
-            // return $this->id;
         }
     
         public function actualizar() {
@@ -158,8 +156,7 @@
                 personal per ON per.id = sm.id_doctor
                 JOIN 
                 especialidades esp ON esp.id = sm.id_especialidad
-                WHERE estado = 1";
-        
+                WHERE c.estado = 1";
             $opciones = array();
         
             if (isset($this->id)) {
@@ -175,11 +172,6 @@
             if (isset($this->id_personal)) {
                 $sql .= " AND per.id = :id_personal";
                 $opciones[':id_personal'] = $this->id_personal;
-            }
-
-            if (isset($this->cedula_paciente)) {
-                $sql .= " AND p.cedula = :cedula_paciente";
-                $opciones[':cedula_paciente'] = $this->cedula_paciente;
             }
 
             $query = $this->conexion->prepare($sql);
@@ -207,7 +199,7 @@
                 personal per ON per.id = sm.id_doctor
                 JOIN 
                 especialidades esp ON esp.id = sm.id_especialidad
-                WHERE estado = 0";
+                WHERE c.estado = 0";
         
             $opciones = array();
         
@@ -225,12 +217,7 @@
                 $sql .= " AND per.id = :id_personal";
                 $opciones[':id_personal'] = $this->id_personal;
             }
-            
-            if (isset($this->cedula_paciente)) {
-                $sql .= " AND p.cedula = :cedula_paciente";
-                $opciones[':cedula_paciente'] = $this->cedula_paciente;
-            }
-            
+        
             $query = $this->conexion->prepare($sql);
             $query->execute($opciones);
             return $query->fetchAll();

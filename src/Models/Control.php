@@ -5,18 +5,25 @@ class Control extends Conexion {
 
     private $id;
     private $id_cita;
+    private $id_paciente;
+    private $diagnostico;
+    private $medicamentosRecetados;
     private $fecha_control;
-    private $hora_control;
+    private $fecha_regreso;
+    private $nota;
     private $estado;
 
-    function __construct($id = null,$id_cita = null, $fecha_control = null, $hora_control = null, $estado = null) {
+    function __construct($id = null,$id_cita = null, $id_paciente = null, $diagnostico = null, $medicamentosRecetados = null, $fecha_control = null, $fecha_regreso = null, $nota = null, $estado = null) {
         parent::__construct();
 
         $this->id = $id;
-        $this->cedula_paciente = $cedula_paciente;
         $this->id_cita = $id_cita;
+        $this->id_paciente = $id_paciente;
+        $this->diagnostico = $diagnostico;
+        $this->medicamentosRecetados = $medicamentosRecetados;
         $this->fecha_control = $fecha_control;
-        $this->hora_control = $hora_control;
+        $this->fecha_regreso = $fecha_regreso;
+        $this->nota = $nota;
         $this->estado = $estado;
     }
 
@@ -25,19 +32,29 @@ class Control extends Conexion {
         return $this->id;
     }
 
-    public function getCedulaPaciente() {
-        return $this->cedula_paciente;
-    }   
     public function getIdCita() {
         return $this->id_cita;
     }
+    public function getIdPaciente() {
+        return $this->id_paciente;
+    }
 
+    public function getDiagnostico() {
+        return $this->diagnostico;
+    }
+    public function getMedicamentosRecetados() {
+        return $this->medicamentosRecetados;
+    }
     public function getFechaControl() {
         return $this->fecha_control;
     }
 
-    public function getHoraControl() {
-        return $this->hora_control;
+    public function getFechaRegreso() {
+        return $this->fecha_regreso;
+    }
+
+    public function getNota() {
+        return $this->nota;
     }
 
     public function getEstado() {
@@ -49,20 +66,30 @@ class Control extends Conexion {
         $this->id = $id;
     }
 
-    public function setCedulaPaciente($cedula_paciente) {
-        $this->cedula_paciente = $cedula_paciente;
-    }
-
     public function setIdCita($id_cita) {
         $this->id_cita = $id_cita;
+    }
+    public function setIdPaciente($id_paciente) {
+        $this->id_paciente = $id_paciente;
+    }
+
+    public function setDiagnostico($diagnostico) {
+        $this->diagnostico = $diagnostico;
+    }
+    public function setMedicamentosRecetados($medicamentosRecetados) {
+        $this->medicamentosRecetados = $medicamentosRecetados;
     }
 
     public function setFechaControl($fecha_control) {
         $this->fecha_control = $fecha_control;
     }
 
-    public function setHoraControl($hora_control) {
-        $this->hora_control = $hora_control;
+    public function setFechaRegreso($fecha_regreso) {
+        $this->fecha_regreso = $fecha_regreso;
+    }
+    
+    public function setNota($nota) {
+        $this->nota = $nota;
     }
 
     public function setEstado($estado) {
@@ -70,88 +97,104 @@ class Control extends Conexion {
     }
 
     // CRUD
-    public function insertar() {
-        $sql = "INSERT INTO control (id, cedula_paciente, id_cita, fecha_control, hora_control, estado) 
-                    VALUES (:id, :cedula_paciente, :id_cita, :fecha_control, :hora_control, :estado)";
-        $query = $this->conexion->prepare($sql);
-        $query->execute(array(
-            ':id' => $this->id,
-            ':cedula_paciente' => $this->cedula_paciente,
-            ':id_cita' => $this->id_cita,
-            ':fecha_control' => $this->fecha_control,
-            ':hora_control' => $this->hora_control,
-            ':estado' => $this->estado
-        ));
-        // $this->id = $this->conexion->lastInsertId();
-        // return $this->id;
-    }
+    public function insertar($id, $diagnostico, $medicamentosRecetados, $fecha_control, $fecha_regreso, $nota, $estado, $id_cita) {
+        $sql = "INSERT INTO control (id, id_cita, diagnostico, medicamentosRecetados, fecha_control, fecha_regreso, nota, estado) VALUES (:id, :id_cita, :diagnostico, :medicamentosRecetados, :fecha_control, :fecha_regreso, :nota, :estado)";
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':id_cita', $id_cita);
+        $stmt->bindParam(':diagnostico', $diagnostico);
+        $stmt->bindParam(':medicamentosRecetados', $medicamentosRecetados);
+        $stmt->bindParam(':fecha_control', $fecha_control);
+        $stmt->bindParam(':fecha_regreso', $fecha_regreso);
+        $stmt->bindParam(':nota', $nota);
+        $stmt->bindParam(':estado', $estado);
 
-    public function actualizar() {
-        $sql = "UPDATE control 
-                    SET cedula_paciente = :cedula_paciente, id_cita = :id_cita, fecha_control = :fecha_control, hora_control = :hora_control, estado = :estado 
-                    WHERE id = :id";
-        $query = $this->conexion->prepare($sql);
-        $query->execute(array(
-            ':id' => $this->id,
-            ':cedula_paciente' => $this->cedula_paciente,
-            ':id_cita' => $this->id_cita,
-            ':fecha_control' => $this->fecha_control,
-            ':hora_control' => $this->hora_control,
-            ':estado' => $this->estado
-        ));
+        return $stmt->execute();
     }
-    public function eliminar() {
+    public function actualizar($id, $diagnostico, $medicamentosRecetados, $fecha_control, $fecha_regreso, $nota, $estado, $id_cita) {
+        $sql = "UPDATE control SET id_cita = :id_cita, diagnostico = :diagnostico, medicamentosRecetados = :medicamentosRecetados, fecha_control = :fecha_control, fecha_regreso = :fecha_regreso, nota = :nota, estado = :estado WHERE id = :id";
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':id_cita', $id_cita);
+        $stmt->bindParam(':diagnostico', $diagnostico);
+        $stmt->bindParam(':medicamentosRecetados', $medicamentosRecetados);
+        $stmt->bindParam(':fecha_control', $fecha_control);
+        $stmt->bindParam(':fecha_regreso', $fecha_regreso);
+        $stmt->bindParam(':nota', $nota);
+        $stmt->bindParam(':estado', $estado);
+        return $stmt->execute();
+    }
+    public function eliminar($id) {
         $sql = "UPDATE control SET estado = 0 WHERE id = :id";
-        $query = $this->conexion->prepare($sql);
-        $query->execute(array(':id' => $this->id));
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute();
     }
 
-    public function getControl() {
+    public function getPacientsControl() {
         $sql = "SELECT 
-                p.cedula AS Cedula,
-                CONCAT(p.nombre, ' ', p.apellido) AS Nombre,
-                p.telefono AS Telefono,
-                CONCAT(per.nombre, ' ', per.apellido) AS Doctor,
-                esp.nombre AS Especialidad,
-                c.fecha,
-                c.hora,
-                c.emergencia,
-                c.estado
+                    p.id, p.cedula, CONCAT(p.nombre, ' ', p.apellido) AS nombre
                 FROM 
-                citas c
+                    pacientes p
                 JOIN 
-                pacientes p ON p.id = c.id_paciente
+                    citas c ON c.id_paciente = p.id
                 JOIN 
-                servicio_medico sm ON sm.id = c.id_servicio_medico
-                JOIN 
-                personal per ON per.id = sm.id_doctor
-                JOIN 
-                especialidades esp ON esp.id = sm.id_especialidad
-                WHERE estado = 1";
-        
-            $opciones = array();
-        
-            if (isset($this->id)) {
-            $sql .= " AND c.id = :id";
-            $opciones[':id'] = $this->id;
-            }
-        
-            if (isset($this->fecha)) {
-            $sql .= " AND c.fecha = :fecha";
-            $opciones[':fecha'] = $this->fecha;
-            }
-            
-            if (isset($this->id_personal)) {
-                $sql .= " AND per.id = :id_personal";
-                $opciones[':id_personal'] = $this->id_personal;
-            }
+                    control ctr ON ctr.id_cita = c.id;";
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 
-            if (isset($this->cedula_paciente)) {
-                $sql .= " AND p.cedula = :cedula_paciente";
-                $opciones[':cedula_paciente'] = $this->cedula_paciente;
-            }
+    public function getPacientControl($id_paciente) {
+        $sql = "SELECT 
+                    ctr.id,
+                    ctr.fecha_control,
+                    esp.nombre AS Servicio_Medico,
+                    CONCAT(per.nombre, ' ', per.apellido) AS Doctor
+                FROM 
+                    control ctr
+                JOIN
+                    citas c ON ctr.id_cita = c.id
+                JOIN
+                    pacientes p ON c.id_paciente = p.id
+                JOIN
+                    servicio_medico sm ON c.id_servicio_medico = sm.id
+                JOIN
+                    especialidades esp ON sm.id_especialidad = esp.id
+                JOIN
+                    personal per ON sm.id_doctor = per.id
+                WHERE 
+                    p.id = :id_paciente;";
 
-            $query = $this->conexion->prepare($sql);
-            $query->execute($opciones);
-            return $query->fetchAll();
-        }
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->bindParam(':id_paciente', $id_paciente);
+        $stmt->execute();
+
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    public function getControl($id) {
+        $sql = "SELECT 
+                    ctr.id,
+                    ctr.id_cita,
+                    CONCAT(p.nombre, ' ', p.apellido) AS nombre_paciente,
+                    ctr.fecha_control,
+                    ctr.diagnostico,
+                    ctr.medicamentosRecetados,
+                    ctr.nota,
+                    ctr.fecha_regreso,
+                    ctr.estado,
+                FROM 
+                    control ctr
+                JOIN 
+                    citas c ON ctr.id_cita = c.id
+                JOIN 
+                    pacientes p ON c.id_paciente = p.id
+                WHERE 
+                    ctr.id = :id";
+        $stmt = $this->conexion->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+}

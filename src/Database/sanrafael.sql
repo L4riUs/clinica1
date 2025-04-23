@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 18-04-2025 a las 00:59:11
+-- Tiempo de generación: 23-04-2025 a las 03:09:53
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -33,8 +33,17 @@ CREATE TABLE `citas` (
   `id_paciente` int(11) NOT NULL,
   `fecha` datetime NOT NULL,
   `hora` time NOT NULL,
-  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
+  `emergencia` tinyint(1) NOT NULL DEFAULT 0,
+  `estado` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `citas`
+--
+
+INSERT INTO `citas` (`id`, `id_servicio_medico`, `id_paciente`, `fecha`, `hora`, `emergencia`, `estado`) VALUES
+(1, 1, 1, '2025-04-22 22:41:29', '20:43:29', 0, 1),
+(2, 1, 1, '2025-04-23 01:32:06', '00:00:00', 0, 1);
 
 -- --------------------------------------------------------
 
@@ -44,14 +53,21 @@ CREATE TABLE `citas` (
 
 CREATE TABLE `control` (
   `id` int(11) NOT NULL,
-  `id_paciente` int(11) NOT NULL,
+  `id_cita` int(11) NOT NULL,
   `diagnostico` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `medicamentosRecetados` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `fecha_control` datetime NOT NULL,
   `fechaRegreso` datetime NOT NULL,
   `nota` varchar(40) NOT NULL,
-  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
+  `estado` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `control`
+--
+
+INSERT INTO `control` (`id`, `id_cita`, `diagnostico`, `medicamentosRecetados`, `fecha_control`, `fechaRegreso`, `nota`, `estado`) VALUES
+(1, 1, '.............', '.............', '2025-04-23 01:22:59', '2025-04-25 19:22:59', 'Debe hacerse hematología completa', 1);
 
 -- --------------------------------------------------------
 
@@ -245,6 +261,13 @@ CREATE TABLE `pacientes` (
   `estado` varchar(5) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `pacientes`
+--
+
+INSERT INTO `pacientes` (`id`, `cedula`, `nombre`, `apellido`, `telefono`, `direccion`, `f_n`, `estado`) VALUES
+(1, '30554145', 'JGP', 'Bastias', '04121338031', '', '2025-04-15', '');
+
 -- --------------------------------------------------------
 
 --
@@ -267,7 +290,7 @@ CREATE TABLE `pagos` (
 
 CREATE TABLE `patologias` (
   `id` int(11) NOT NULL,
-  `nombre_patologia` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `nombre` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `estado` varchar(12) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -292,12 +315,18 @@ CREATE TABLE `patologia_paciente` (
 
 CREATE TABLE `personal` (
   `id` int(11) NOT NULL,
-  `id_especialidad` int(11) DEFAULT NULL,
   `cedula` varchar(20) NOT NULL,
   `nombre` varchar(25) NOT NULL,
   `apellido` varchar(25) NOT NULL,
   `telefono` varchar(20) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Volcado de datos para la tabla `personal`
+--
+
+INSERT INTO `personal` (`id`, `cedula`, `nombre`, `apellido`, `telefono`) VALUES
+(1, '30218990', 'JGP', 'PS', '04121338031');
 
 -- --------------------------------------------------------
 
@@ -324,9 +353,17 @@ CREATE TABLE `proveedores` (
 CREATE TABLE `servicio_medico` (
   `id` int(11) NOT NULL,
   `id_especialidad` int(11) NOT NULL,
+  `id_doctor` int(11) NOT NULL,
   `precio` float(12,2) NOT NULL,
   `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `servicio_medico`
+--
+
+INSERT INTO `servicio_medico` (`id`, `id_especialidad`, `id_doctor`, `precio`, `estado`) VALUES
+(1, 1, 1, 10.00, 'ACT');
 
 -- --------------------------------------------------------
 
@@ -371,7 +408,7 @@ ALTER TABLE `citas`
 --
 ALTER TABLE `control`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `id_paciente` (`id_paciente`);
+  ADD KEY `id_cita` (`id_cita`) USING BTREE;
 
 --
 -- Indices de la tabla `detalles_entrada`
@@ -462,7 +499,8 @@ ALTER TABLE `metodos_pago`
 -- Indices de la tabla `pacientes`
 --
 ALTER TABLE `pacientes`
-  ADD PRIMARY KEY (`id`);
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cedula` (`cedula`);
 
 --
 -- Indices de la tabla `pagos`
@@ -490,7 +528,7 @@ ALTER TABLE `patologia_paciente`
 --
 ALTER TABLE `personal`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `id_especialidad` (`id_especialidad`);
+  ADD UNIQUE KEY `cedula` (`cedula`);
 
 --
 -- Indices de la tabla `proveedores`
@@ -503,7 +541,8 @@ ALTER TABLE `proveedores`
 --
 ALTER TABLE `servicio_medico`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `id_especialidad` (`id_especialidad`);
+  ADD KEY `id_especialidad` (`id_especialidad`),
+  ADD KEY `id_doctor` (`id_doctor`);
 
 --
 -- Indices de la tabla `sintomas`
@@ -525,13 +564,13 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `citas`
 --
 ALTER TABLE `citas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `control`
 --
 ALTER TABLE `control`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `detalles_entrada`
@@ -570,6 +609,24 @@ ALTER TABLE `metodos_pago`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `pacientes`
+--
+ALTER TABLE `pacientes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `personal`
+--
+ALTER TABLE `personal`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `servicio_medico`
+--
+ALTER TABLE `servicio_medico`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
 -- Restricciones para tablas volcadas
 --
 
@@ -584,7 +641,7 @@ ALTER TABLE `citas`
 -- Filtros para la tabla `control`
 --
 ALTER TABLE `control`
-  ADD CONSTRAINT `control_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `control_ibfk_1` FOREIGN KEY (`id_cita`) REFERENCES `citas` (`id`) ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `detalles_entrada`
@@ -653,16 +710,11 @@ ALTER TABLE `patologia_paciente`
   ADD CONSTRAINT `patologia_paciente_ibfk_2` FOREIGN KEY (`id_patologia`) REFERENCES `patologias` (`id`) ON UPDATE CASCADE;
 
 --
--- Filtros para la tabla `personal`
---
-ALTER TABLE `personal`
-  ADD CONSTRAINT `personal_ibfk_1` FOREIGN KEY (`id_especialidad`) REFERENCES `especialidades` (`id`) ON UPDATE CASCADE;
-
---
 -- Filtros para la tabla `servicio_medico`
 --
 ALTER TABLE `servicio_medico`
-  ADD CONSTRAINT `servicio_medico_ibfk_1` FOREIGN KEY (`id_especialidad`) REFERENCES `especialidades` (`id`) ON UPDATE CASCADE;
+  ADD CONSTRAINT `servicio_medico_ibfk_1` FOREIGN KEY (`id_especialidad`) REFERENCES `especialidades` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `servicio_medico_ibfk_2` FOREIGN KEY (`id_doctor`) REFERENCES `personal` (`id`) ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
