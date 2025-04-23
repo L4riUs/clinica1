@@ -1,5 +1,7 @@
 <?php
 namespace Proyecto\Clinica\Models;
+use DateTime;
+
 class Facturas extends Conexion {
     private $id;
     private $id_paciente;
@@ -34,17 +36,29 @@ class Facturas extends Conexion {
 
         // 3) Si emergencia, suma insumos de hospitalización
         if ($cita['emergencia']) {
-            $controlSql = "SELECT id FROM control WHERE id_cita = :id_cita";
-            $cStmt = $this->conexion->prepare($controlSql);
-            $cStmt->execute([':id_cita' => $id_cita]);
-            $control = $cStmt->fetch();
-
-            $hSql = "SELECT id FROM hospitalizacion WHERE id_control = :id_control";
-            $hStmt = $this->conexion->prepare($hSql);
-            $hStmt->execute([':id_control' => $control['id']]);
-            $h = $hStmt->fetch();
-
-            $ih = new InsumoHospitalizacion();
+            // a) Obtenemos control e ID de hospitalización
+            $controlStmt = $this->conexion
+                ->prepare("SELECT id FROM control WHERE id_cita = :id_cita");
+            $controlStmt->execute([':id_cita' => $id_cita]);
+            $control = $controlStmt->fetch();
+    
+            $hospStmt = $this->conexion
+                ->prepare("SELECT id, fecha_hora_inicio, fecha_hora_final, precio_horas FROM hospitalizacion WHERE id_control = :id_control");
+            $hospStmt->execute([':id_control' => $control['id']]);
+            $h = $hospStmt->fetch();
+    
+            // b) Costo de hospitalización: diferencia en horas × tarifa por hora
+            $inicio = new DateTime($h['fecha_hora_inicio']);
+            $fin    = new DateTime($h['fecha_hora_final']);
+            $intervalo = $fin->diff($inicio);
+            $horas     = $intervalo->days * 24
+                       + $intervalo->h
+                       + $intervalo->i / 60;
+            $costoHospital = $horas * $h['precio_horas'];
+            $total += $costoHospital;
+    
+            // c) Ahora traemos insumos ligados a esa hospitalización
+            $ih      = new InsumoHospitalizacion();
             $insumos = $ih->getPorHospitalizacion($h['id']);
             foreach ($insumos as $item) {
                 $total += $item['precio_unitario'] * $item['cantidad'];
@@ -92,3 +106,40 @@ class Facturas extends Conexion {
         }
     }
 }
+
+// public function insertarDesdeCita($id_cita) {
+//     // … (todo lo anterior permanece igual: obtención de cita, cálculo de total, inserción de factura) …
+
+//     // 5) Detalles de insumos en emergencia, ahora desde insumo_hospitalizacion
+//     if (!empty($insumos)) {
+//         // obtenemos directamente los registros vinculados a la hospitalización
+//         $ihStmt = $this->conexion->prepare("
+//             SELECT 
+//                 ih.id            AS id_ih,
+//                 ih.id_insumo     AS id_insumo,
+//                 ih.cantidad      AS cantidad,
+//                 i.precio         AS precio_unitario
+//             FROM insumo_hospitalizacion ih
+//             JOIN insumos i ON ih.id_insumo = i.id
+//             WHERE ih.id_hospitalizacion = :id_hosp
+//         ");
+//         $ihStmt->execute([':id_hosp' => $h['id']]);
+//         $consumos = $ihStmt->fetchAll();
+
+//         // para cada consumo, calculamos subtotal y creamos el detalle de factura
+//         foreach ($consumos as $c) {
+//             // 1) Sumamos al total (si no lo hiciste antes)
+//             $subtotal = $c['precio_unitario'] * $c['cantidad'];
+//             // (opcional) — si quieres ajustar el campo total después de la inserción:
+//             // $this->total += $subtotal;
+
+//             // 2) Insertamos en detalles_factura usando id_insumo_hospitalizacion
+//             //    Si la tabla detalles_factura sigue apuntando a inventario, deberías
+//             //    adaptar su estructura para usar id_insumo_hospitalizacion en lugar de id_inventario.
+//             $df = new DetallesFactura(null, $this->id, $c['id_ih']);
+//             $df->insertar();
+//         }
+//     }
+
+//     return $this->id;
+// }
