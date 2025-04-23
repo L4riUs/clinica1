@@ -2,16 +2,13 @@
 namespace Proyecto\Clinica\Models;
 class Horario extends Conexion {
     private $id;
-    private $dias;           // array de strings: ['Lunes','Martes',...]
-    private $hora_entrada;   // 'HH:MM:SS'
-    private $hora_salida;    // 'HH:MM:SS'
+    private $dias;
+    
 
     public function __construct($id = null, $dias = [], $hora_entrada = null, $hora_salida = null) {
         parent::__construct();
         $this->id = $id;
         $this->dias = $dias;
-        $this->hora_entrada = $hora_entrada;
-        $this->hora_salida  = $hora_salida;
     }
 
     private function diasToString() {
