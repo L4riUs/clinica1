@@ -6,7 +6,7 @@ class Inventario extends Conexion
 {
     public function resumenInventario()
     {
-        $sql = "SELECT i.id_insumo, ins.nombre, SUM(de.existencia) AS total_existencia
+        $sql = "SELECT de.id_insumo, ins.nombre, SUM(de.existencia) AS total_existencia
                 FROM detalles_entrada de
                 JOIN insumos ins ON de.id_insumo = ins.id
                 GROUP BY de.id_insumo";
