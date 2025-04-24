@@ -62,7 +62,7 @@ class C_Control
         $control = new Control();
         $control->setIdCita($_POST["id_cita"]);
         $control->setDiagnostico($_POST["diagnostico"]);
-        $control->setMedicamentosRecetados($_POST["medicamentosRecetados"]);
+        $control->setMedicamentos_recetados($_POST["medicamentosRecetados"]);
         $control->setFechaControl($_POST["fecha_control"]);
         $control->setFechaRegreso($_POST["fecha_regreso"]);
         $control->setNota($_POST["nota"]);
@@ -71,7 +71,7 @@ class C_Control
         $control->insertar(
             $control->getIdCita(),
             $control->getDiagnostico(),
-            $control->getMedicamentosRecetados(),
+            $control->getMedicamentos_recetados(),
             $control->getFechaControl(),
             $control->getFechaRegreso(),
             $control->getNota(),
@@ -91,20 +91,16 @@ class C_Control
 
         $control = new Control();
         $control->setId($_POST["id"]);
-        $control->setIdCita($_POST["id_cita"]);
         $control->setDiagnostico($_POST["diagnostico"]);
-        $control->setMedicamentosRecetados($_POST["medicamentosRecetados"]);
-        $control->setFechaControl($_POST["fecha_control"]);
+        $control->setMedicamentos_recetados($_POST["medicamentosRecetados"]);
         $control->setFechaRegreso($_POST["fecha_regreso"]);
         $control->setNota($_POST["nota"]);
-        $control->setEstado($_POST["estado"] == "false" ? 0 : 1);
+        $control->setEstado($_POST["estado"]);
 
         $control->actualizar(
             $control->getId(),
-            $control->getIdCita(),
             $control->getDiagnostico(),
-            $control->getMedicamentosRecetados(),
-            $control->getFechaControl(),
+            $control->getMedicamentos_recetados(),
             $control->getFechaRegreso(),
             $control->getNota(),
             $control->getEstado()
@@ -113,7 +109,7 @@ class C_Control
         echo json_encode(["status" => "success", "message" => "Control actualizado correctamente"]);
     }
 
-    public function EliminarControl()
+    public function ToggleEstado()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             echo json_encode(["status" => "error", "message" => "Método no permitido"]);
@@ -122,8 +118,8 @@ class C_Control
 
         $control = new Control();
         $control->setId($_POST["id"]);
-        $control->eliminar($control->getId());
+        $control->toggleEstado($control->getId());
 
-        echo json_encode(["status" => "success", "message" => "Control eliminado correctamente"]);
+        echo json_encode(["status" => "success", "message" => "Estado de control actualizado correctamente"]);
     }
 }

@@ -129,6 +129,13 @@
                 ':id' => $this->id
             ));
         }
+        public function toggleEstado() {
+            $sql = "UPDATE citas 
+                    SET estado = 1 
+                    WHERE id = :id";
+            $query = $this->conexion->prepare($sql);
+            $query->execute(array(':id' => $this->id));
+        }
         public function eliminar() {
             $sql = "UPDATE citas SET estado = 0 WHERE id = :id";
             $query = $this->conexion->prepare($sql);

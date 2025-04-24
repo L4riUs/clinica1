@@ -29,7 +29,7 @@
         }
 
         public function getIdControl() {
-            return $this->id_control;
+            return $this->id_control; 
         }
 
         public function getFechaHoraInicio() {

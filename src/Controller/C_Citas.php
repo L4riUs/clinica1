@@ -43,4 +43,17 @@ class C_Citas
             echo json_encode(["status" => "error", "message" => "Método no permitido"]);
         }
     }
+    public function toggleEstado()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(["status" => "error", "message" => "Método no permitido"]);
+            return;
+        }
+
+        $cita = new Citas();
+        $cita->setId($_POST["id"]);
+        $cita->toggleEstado();
+
+        echo json_encode(["status" => "success", "message" => "Cita actualizada correctamente"]);
+    }
 }
