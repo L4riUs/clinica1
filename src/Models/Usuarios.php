@@ -6,15 +6,18 @@ class Usuarios extends Conexion
 
     private $id;
     private $nombre;
+    private $usuario;
     private $password;
     private $llave;
 
-    function __construct($id = null, $nombre = null, $password = null)
+    function __construct($id = null, $nombre = null,$usuario = null,
+     $password = null)
     {
         parent::__construct();
 
         $this->id = $id;
         $this->nombre = $nombre;
+        $this->usuario = $usuario;
         $this->password = $password;
         $this->llave = null;
     }
@@ -27,6 +30,11 @@ class Usuarios extends Conexion
     public function getNombre()
     {
         return $this->nombre;
+    }
+
+    public function getUsuario()
+    {
+        return $this->usuario;
     }
 
     public function getPassword()
@@ -42,6 +50,11 @@ class Usuarios extends Conexion
     public function setNombre($nombre)
     {
         $this->nombre = $nombre;
+    }
+
+    public function setUsuario($usuario)
+    {
+        $this->usuario = $usuario;
     }
 
     public function setPassword($password)
@@ -61,10 +74,10 @@ class Usuarios extends Conexion
 
     public function cambiar_contraseña()
     {
-        $sql = "SELECT id FROM usuario WHERE nombre=:nombre and llave=:llave";
+        $sql = "SELECT id FROM usuario WHERE usuario=:usuario and llave=:llave";
         $query = $this->conexion->prepare($sql);
         $query->execute(array(
-            ':nombre' => $this->nombre,
+            ':usuario' => $this->usuario,
             ':llave' => $this->llave
         ));
         $usuarios = $query->fetchAll();
@@ -126,10 +139,10 @@ class Usuarios extends Conexion
 
     public function check()
     {
-        $sql = "SELECT * FROM usuario WHERE nombre=:nombre AND password=:password";
+        $sql = "SELECT * FROM usuarios WHERE usuario=:usuario AND password=:password";
         $query = $this->conexion->prepare($sql);
         $query->execute(array(
-            ':nombre' => $this->nombre,
+            ':usuario' => $this->usuario,
             ':password' => $this->password
         ));
         $usuarios = $query->fetchAll();

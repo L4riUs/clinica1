@@ -8,10 +8,10 @@
     </head>
     <body>
         <div id="login">
-            <form action="Func/login" method="post">
+            <form action="?c=Login&a=Login" method="post">
                 <img src="assets/img/logo-nobg.png" alt="logo">
                 <label for="nombre">Usuario:</label>
-                <input type="text" name="nombre" id="usuario">
+                <input type="text" name="usuario" id="nombre">
                 <label for="password">Contraseña:</label>
                 <input type="password" name="password" id="password">
                 <input type="submit" value="Login">
