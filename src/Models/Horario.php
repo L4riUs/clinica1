@@ -20,7 +20,6 @@ class Horario extends Conexion {
 
     public function insertar(){
         $sql = "INSERT INTO horario (dias_laborables) VALUES (:dias)";
-        // asumimos que hora_entrada y hora_salida se guardan en horario_personal
         $stmt = $this->conexion->prepare($sql);
         $stmt->execute([':dias' => $this->diasToString()]);
         return $this->conexion->lastInsertId();

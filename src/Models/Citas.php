@@ -8,11 +8,10 @@
         private $id_personal;
         private $id_paciente;
         private $fecha;
-        private $hora;
         private $emergencia;
         private $estado;
     
-        function __construct($id = null, $id_servicio_medico = null, $cedula_paciente = null, $id_personal = null, $id_paciente = null, $fecha = null, $hora = null,$emergencia = null, $estado = null) {
+        function __construct($id = null, $id_servicio_medico = null, $cedula_paciente = null, $id_personal = null, $id_paciente = null, $fecha = null,$emergencia = null, $estado = null) {
             parent::__construct();
     
             $this->id = $id;
@@ -21,7 +20,6 @@
             $this->id_personal = $id_personal;
             $this->id_paciente = $id_paciente;
             $this->fecha = $fecha;
-            $this->hora = $hora;
             $this->emergencia = $emergencia;
             $this->estado = $estado;
         }
@@ -50,10 +48,6 @@
             return $this->fecha;
         }
     
-        public function getHora() {
-            return $this->hora;
-        }
-
         public function getEmergencia() {
             return $this->emergencia;
         }
@@ -87,10 +81,6 @@
             $this->fecha = $fecha;
         }
     
-        public function setHora($hora) {
-            $this->hora = $hora;
-        }
-
         public function setEmergencia($emergencia) {
             $this->emergencia = $emergencia;
         }
@@ -101,14 +91,13 @@
     
         // CRUD
         public function insertar() {
-            $sql = "INSERT INTO citas (id_servicio_medico, id_paciente, fecha, hora, emergencias, estado) 
-                    VALUES (:id_servicio_medico, :id_paciente, :fecha, :hora, :emergencia, :estado)";
+            $sql = "INSERT INTO citas (id_servicio_medico, id_paciente, fecha, emergencia, estado) 
+                    VALUES (:id_servicio_medico, :id_paciente, :fecha, :emergencia, :estado)";
             $query = $this->conexion->prepare($sql);
             $query->execute(array(
                 ':id_servicio_medico' => $this->id_servicio_medico,
                 ':id_paciente' => $this->id_paciente,
                 ':fecha' => $this->fecha,
-                ':hora' => $this->hora,
                 ':emergencia' => $this->emergencia,
                 ':estado' => $this->estado
             ));
