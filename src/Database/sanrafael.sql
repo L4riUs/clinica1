@@ -1,687 +1,925 @@
--- MySQL dump 10.13  Distrib 8.0.34, for Win64 (x86_64)
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
 --
--- Host: localhost    Database: clinica1
--- ------------------------------------------------------
--- Server version	8.0.34
+-- Servidor: 127.0.0.1
+-- Tiempo de generación: 25-04-2025 a las 02:45:54
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!40101 SET NAMES utf8mb4 */;
 
 --
--- Table structure for table `citas`
+-- Base de datos: `sanrafael`
 --
 
-DROP TABLE IF EXISTS `citas`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `citas`
+--
+
 CREATE TABLE `citas` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_servicio_medico` int NOT NULL,
-  `id_paciente` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_servicio_medico` int(11) NOT NULL,
+  `id_paciente` int(11) NOT NULL,
   `fecha` datetime NOT NULL,
-  `hora` time NOT NULL,
-  `emergencia` tinyint(1) NOT NULL DEFAULT '0',
-  `estado` tinyint(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`),
-  KEY `id_detalles_servicio` (`id_servicio_medico`),
-  KEY `id_paciente` (`id_paciente`),
-  CONSTRAINT `citas_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `citas_ibfk_2` FOREIGN KEY (`id_servicio_medico`) REFERENCES `servicio_medico` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `emergencia` tinyint(1) NOT NULL DEFAULT 0,
+  `estado` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `citas`
+-- Volcado de datos para la tabla `citas`
 --
 
-LOCK TABLES `citas` WRITE;
-/*!40000 ALTER TABLE `citas` DISABLE KEYS */;
-INSERT INTO `citas` VALUES (1,1,1,'2025-04-22 22:41:29','20:43:29',1,1);
-/*!40000 ALTER TABLE `citas` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `citas` (`id`, `id_servicio_medico`, `id_paciente`, `fecha`, `emergencia`, `estado`) VALUES
+(14, 1, 1, '2025-04-25 02:42:24', 1, 1),
+(15, 1, 1, '2025-04-25 02:43:04', 1, 1);
 
 --
--- Table structure for table `control`
+-- Disparadores `citas`
+--
+DELIMITER $$
+CREATE TRIGGER `crear_control_al_confirmar_cita` AFTER UPDATE ON `citas` FOR EACH ROW BEGIN
+  -- Verificamos que el estado haya cambiado de 0 a 1
+  IF OLD.estado <> 1 AND NEW.estado = 1 THEN
+    INSERT INTO control (
+      id_cita, 
+      diagnostico, 
+      medicamentos_recetados, 
+      fecha_control, 
+      fechaRegreso, 
+      nota, 
+      estado
+    ) VALUES (
+      NEW.id,
+      '',               -- Diagnóstico inicial vacío
+      '',               -- Medicamentos recetados inicial vacío
+      NOW(),            -- Fecha de control como fecha actual
+      NULL,
+      'Control inicial automático',
+      1
+    );
+  END IF;
+END
+$$
+DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER `trg_control_y_hospitalizacion_por_emergencia` AFTER INSERT ON `citas` FOR EACH ROW BEGIN
+  DECLARE new_control_id INT;
+
+  IF NEW.emergencia = 1 THEN
+    -- Insertar en la tabla control
+    INSERT INTO control (
+      id_cita,
+      diagnostico,
+      medicamentos_recetados,
+      fecha_control,
+      fechaRegreso,
+      nota,
+      estado
+    ) VALUES (
+      NEW.id,
+      '',
+      '',
+      NOW(),
+      NULL,
+      'Emergencia médica',
+      2
+    );
+
+    -- Capturar el ID generado para control
+    SET new_control_id = LAST_INSERT_ID();
+
+    -- Insertar en la tabla hospitalización
+    INSERT INTO hospitalizacion (
+      id_control,
+      fecha_hora_inicio,
+      precio_horas,
+      total,
+      fecha_hora_final,
+      estado
+    ) VALUES (
+      new_control_id,
+      NOW(),
+      0,
+      0,
+      NULL,
+      'Abierta'
+    );
+  END IF;
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `control`
 --
 
-DROP TABLE IF EXISTS `control`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `control` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_cita` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_cita` int(11) NOT NULL,
   `diagnostico` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `medicamentosRecetados` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
+  `medicamentos_recetados` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `fecha_control` datetime NOT NULL,
-  `fechaRegreso` datetime NOT NULL,
-  `nota` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `estado` tinyint(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`id`),
-  KEY `id_cita` (`id_cita`) USING BTREE,
-  CONSTRAINT `control_ibfk_1` FOREIGN KEY (`id_cita`) REFERENCES `citas` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `fechaRegreso` datetime DEFAULT NULL,
+  `nota` varchar(40) NOT NULL,
+  `estado` varchar(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `control`
+-- Volcado de datos para la tabla `control`
 --
 
-LOCK TABLES `control` WRITE;
-/*!40000 ALTER TABLE `control` DISABLE KEYS */;
-INSERT INTO `control` VALUES (1,1,'.............','.............','2025-04-23 01:22:59','2025-04-25 19:22:59','Debe hacerse hematología completa',1);
-/*!40000 ALTER TABLE `control` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `control` (`id`, `id_cita`, `diagnostico`, `medicamentos_recetados`, `fecha_control`, `fechaRegreso`, `nota`, `estado`) VALUES
+(9, 14, '', '', '2025-04-24 20:42:29', NULL, 'Emergencia médica', '2'),
+(10, 15, '', '', '2025-04-24 20:43:13', NULL, 'Emergencia médica', '2');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `detalles_entrada`
+-- Estructura de tabla para la tabla `detalles_entrada`
 --
 
-DROP TABLE IF EXISTS `detalles_entrada`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `detalles_entrada` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_insumo` int NOT NULL,
-  `id_entrada` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_insumo` int(11) NOT NULL,
+  `id_entrada` int(11) NOT NULL,
   `fecha_vencimiento` date NOT NULL,
   `precio` decimal(12,2) NOT NULL,
-  `cantidad_entrante` int NOT NULL,
-  `existencia` int NOT NULL,
-  `estado` varchar(10) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_insumo` (`id_insumo`,`id_entrada`),
-  KEY `detalles_entrada_ibfk_1` (`id_entrada`),
-  CONSTRAINT `detalles_entrada_ibfk_1` FOREIGN KEY (`id_entrada`) REFERENCES `entradas` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `detalles_entrada_ibfk_2` FOREIGN KEY (`id_insumo`) REFERENCES `insumos` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `cantidad_entrante` int(11) NOT NULL,
+  `existencia` int(11) NOT NULL,
+  `estado` varchar(10) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `detalles_entrada`
+-- Volcado de datos para la tabla `detalles_entrada`
 --
 
-LOCK TABLES `detalles_entrada` WRITE;
-/*!40000 ALTER TABLE `detalles_entrada` DISABLE KEYS */;
-INSERT INTO `detalles_entrada` VALUES (4,1,5,'2025-04-25',25.00,30,30,'0'),(6,2,7,'2025-04-25',25.00,85,45,'0'),(7,1,8,'2025-04-15',25.00,85,20,'0');
-/*!40000 ALTER TABLE `detalles_entrada` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `detalles_entrada` (`id`, `id_insumo`, `id_entrada`, `fecha_vencimiento`, `precio`, `cantidad_entrante`, `existencia`, `estado`) VALUES
+(4, 1, 5, '2025-04-25', 25.00, 30, 30, '0'),
+(6, 2, 7, '2025-04-25', 25.00, 85, 45, '0'),
+(7, 1, 8, '2025-04-15', 25.00, 85, 20, '0');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `detalles_factura`
+-- Estructura de tabla para la tabla `detalles_factura`
 --
 
-DROP TABLE IF EXISTS `detalles_factura`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `detalles_factura` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_factura` int NOT NULL,
-  `id_inventario` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `detalles_factura_ibfk_1` (`id_factura`),
-  KEY `inventario_idx` (`id_inventario`),
-  CONSTRAINT `detalles_factura_ibfk_1` FOREIGN KEY (`id_factura`) REFERENCES `facturas` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `inventario` FOREIGN KEY (`id_inventario`) REFERENCES `inventario` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `id` int(11) NOT NULL,
+  `id_factura` int(11) NOT NULL,
+  `id_inventario` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `detalles_factura`
+-- Volcado de datos para la tabla `detalles_factura`
 --
 
-LOCK TABLES `detalles_factura` WRITE;
-/*!40000 ALTER TABLE `detalles_factura` DISABLE KEYS */;
-INSERT INTO `detalles_factura` VALUES (7,9,12),(8,9,11);
-/*!40000 ALTER TABLE `detalles_factura` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `detalles_factura` (`id`, `id_factura`, `id_inventario`) VALUES
+(7, 9, 12),
+(8, 9, 11);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `entradas`
+-- Estructura de tabla para la tabla `entradas`
 --
 
-DROP TABLE IF EXISTS `entradas`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `entradas` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_proveedor` int NOT NULL,
-  `numero_de_lote` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_proveedor` int(11) NOT NULL,
+  `numero_de_lote` int(11) NOT NULL,
   `fecha_ingreso` date NOT NULL,
-  `precio_compra` float NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_proveedor` (`id_proveedor`),
-  CONSTRAINT `entradas_ibfk_1` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedores` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `precio_compra` float NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `entradas`
+-- Volcado de datos para la tabla `entradas`
 --
 
-LOCK TABLES `entradas` WRITE;
-/*!40000 ALTER TABLE `entradas` DISABLE KEYS */;
-INSERT INTO `entradas` VALUES (5,1,1252,'2025-04-19',25),(7,1,5844668,'2025-04-19',58),(8,1,5844668,'2025-04-19',58);
-/*!40000 ALTER TABLE `entradas` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `entradas` (`id`, `id_proveedor`, `numero_de_lote`, `fecha_ingreso`, `precio_compra`) VALUES
+(5, 1, 1252, '2025-04-19', 25),
+(7, 1, 5844668, '2025-04-19', 58),
+(8, 1, 5844668, '2025-04-19', 58);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `especialidades`
+-- Estructura de tabla para la tabla `especialidades`
 --
 
-DROP TABLE IF EXISTS `especialidades`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `especialidades` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(25) COLLATE utf8mb4_general_ci NOT NULL,
-  `estado` varchar(25) COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `id` int(11) NOT NULL,
+  `nombre` varchar(25) NOT NULL,
+  `estado` varchar(25) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
--- Dumping data for table `especialidades`
+-- Volcado de datos para la tabla `especialidades`
 --
 
-LOCK TABLES `especialidades` WRITE;
-/*!40000 ALTER TABLE `especialidades` DISABLE KEYS */;
-INSERT INTO `especialidades` VALUES (1,'CARDIOLOGIA','ACT'),(2,'ONCOLOGIA','ACT'),(9,'RADIOGRAFIA','ACT'),(100,'CONSULTA GENERAL','ACT'),(101,'Emergencia','ACT');
-/*!40000 ALTER TABLE `especialidades` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `especialidades` (`id`, `nombre`, `estado`) VALUES
+(1, 'CARDIOLOGIA', 'ACT'),
+(2, 'ONCOLOGIA', 'ACT'),
+(9, 'RADIOGRAFIA', 'ACT'),
+(100, 'CONSULTA GENERAL', 'ACT'),
+(101, 'Emergencia', 'ACT');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `facturas`
+-- Estructura de tabla para la tabla `facturas`
 --
 
-DROP TABLE IF EXISTS `facturas`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `facturas` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_paciente` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_paciente` int(11) NOT NULL,
   `fecha` date NOT NULL,
   `total` float(12,2) NOT NULL,
-  `estado` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_paciente` (`id_paciente`),
-  CONSTRAINT `facturas_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `estado` varchar(10) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `facturas`
+-- Volcado de datos para la tabla `facturas`
 --
 
-LOCK TABLES `facturas` WRITE;
-/*!40000 ALTER TABLE `facturas` DISABLE KEYS */;
-INSERT INTO `facturas` VALUES (9,1,'2025-04-23',1410.00,'PAGADO');
-/*!40000 ALTER TABLE `facturas` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `facturas` (`id`, `id_paciente`, `fecha`, `total`, `estado`) VALUES
+(9, 1, '2025-04-23', 1410.00, 'PAGADO');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `horario`
+-- Estructura de tabla para la tabla `horario`
 --
 
-DROP TABLE IF EXISTS `horario`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `horario` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `dias_laborables` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  `id` int(11) NOT NULL,
+  `dias_laborables` varchar(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `horario`
+-- Estructura de tabla para la tabla `horario_personal`
 --
 
-LOCK TABLES `horario` WRITE;
-/*!40000 ALTER TABLE `horario` DISABLE KEYS */;
-/*!40000 ALTER TABLE `horario` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `horario_personal`
---
-
-DROP TABLE IF EXISTS `horario_personal`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `horario_personal` (
-  `id` int NOT NULL,
-  `id_personal` int NOT NULL,
-  `id_horario` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_personal` int(11) NOT NULL,
+  `id_horario` int(11) NOT NULL,
   `hora_entrada` time NOT NULL,
-  `hora_salida` time NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_doctor` (`id_personal`),
-  KEY `id_horario` (`id_horario`),
-  CONSTRAINT `horario_personal_ibfk_1` FOREIGN KEY (`id_horario`) REFERENCES `horario` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `horario_personal_ibfk_2` FOREIGN KEY (`id_personal`) REFERENCES `personal` (`id`) ON UPDATE CASCADE
+  `hora_salida` time NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `horario_personal`
+-- Estructura de tabla para la tabla `hospitalizacion`
 --
 
-LOCK TABLES `horario_personal` WRITE;
-/*!40000 ALTER TABLE `horario_personal` DISABLE KEYS */;
-/*!40000 ALTER TABLE `horario_personal` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `hospitalizacion`
---
-
-DROP TABLE IF EXISTS `hospitalizacion`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `hospitalizacion` (
-  `id` int NOT NULL,
-  `id_control` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_control` int(11) NOT NULL,
   `fecha_hora_inicio` datetime NOT NULL,
   `precio_horas` float NOT NULL,
   `total` float NOT NULL,
-  `fecha_hora_final` datetime NOT NULL,
-  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_control` (`id_control`),
-  CONSTRAINT `hospitalizacion_ibfk_1` FOREIGN KEY (`id_control`) REFERENCES `control` (`id`) ON UPDATE CASCADE
+  `fecha_hora_final` datetime DEFAULT NULL,
+  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `hospitalizacion`
+-- Volcado de datos para la tabla `hospitalizacion`
 --
 
-LOCK TABLES `hospitalizacion` WRITE;
-/*!40000 ALTER TABLE `hospitalizacion` DISABLE KEYS */;
-INSERT INTO `hospitalizacion` VALUES (1,1,'2025-04-23 14:30:00',20,5,'2025-04-23 14:30:00','0');
-/*!40000 ALTER TABLE `hospitalizacion` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `hospitalizacion` (`id`, `id_control`, `fecha_hora_inicio`, `precio_horas`, `total`, `fecha_hora_final`, `estado`) VALUES
+(1, 9, '2025-04-24 20:42:29', 0, 0, NULL, 'Abierta'),
+(2, 9, '2025-04-24 20:42:29', 0, 0, NULL, 'Abierta'),
+(3, 10, '2025-04-24 20:43:13', 0, 0, NULL, 'Abierta');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `insumo_hospitalizacion`
+-- Estructura de tabla para la tabla `insumos`
 --
 
-DROP TABLE IF EXISTS `insumo_hospitalizacion`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `insumo_hospitalizacion` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_hospitalizacion` int NOT NULL,
-  `id_insumo` int NOT NULL,
-  `cantidad` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_hospitalizacion` (`id_hospitalizacion`),
-  KEY `id_insumo` (`id_insumo`),
-  CONSTRAINT `insumo_hospitalizacion_ibfk_1` FOREIGN KEY (`id_hospitalizacion`) REFERENCES `hospitalizacion` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `insumo_hospitalizacion_ibfk_2` FOREIGN KEY (`id_insumo`) REFERENCES `insumos` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `insumo_hospitalizacion`
---
-
-LOCK TABLES `insumo_hospitalizacion` WRITE;
-/*!40000 ALTER TABLE `insumo_hospitalizacion` DISABLE KEYS */;
-INSERT INTO `insumo_hospitalizacion` VALUES (10,1,2,20),(11,1,1,20);
-/*!40000 ALTER TABLE `insumo_hospitalizacion` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `insumos`
---
-
-DROP TABLE IF EXISTS `insumos`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `insumos` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `nombre` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `descripcion` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `precio` float(12,2) NOT NULL,
-  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `insumos`
+-- Volcado de datos para la tabla `insumos`
 --
 
-LOCK TABLES `insumos` WRITE;
-/*!40000 ALTER TABLE `insumos` DISABLE KEYS */;
-INSERT INTO `insumos` VALUES (1,'jeringa','jeringa 1',20.00,'0'),(2,'acetaminofen','acetaminofen1',50.00,'0');
-/*!40000 ALTER TABLE `insumos` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `insumos` (`id`, `nombre`, `descripcion`, `precio`, `estado`) VALUES
+(1, 'jeringa', 'jeringa 1', 20.00, '0'),
+(2, 'acetaminofen', 'acetaminofen1', 50.00, '0');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `inventario`
+-- Estructura de tabla para la tabla `insumo_hospitalizacion`
 --
 
-DROP TABLE IF EXISTS `inventario`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `insumo_hospitalizacion` (
+  `id` int(11) NOT NULL,
+  `id_hospitalizacion` int(11) NOT NULL,
+  `id_insumo` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `insumo_hospitalizacion`
+--
+
+INSERT INTO `insumo_hospitalizacion` (`id`, `id_hospitalizacion`, `id_insumo`, `cantidad`) VALUES
+(10, 1, 2, 20),
+(11, 1, 1, 20);
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `inventario`
+--
+
 CREATE TABLE `inventario` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_insumo` int NOT NULL,
-  `id_insumo_hospitalizacion` int NOT NULL,
-  `cantidad` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_insumo` int(11) NOT NULL,
+  `id_insumo_hospitalizacion` int(11) NOT NULL,
+  `cantidad` int(11) NOT NULL,
   `fecha_vencimiento` date NOT NULL,
-  `numero_lote` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_insumo` (`id_insumo`),
-  KEY `insumos_hosp_idx` (`id_insumo_hospitalizacion`),
-  CONSTRAINT `insumos_hosp` FOREIGN KEY (`id_insumo_hospitalizacion`) REFERENCES `insumo_hospitalizacion` (`id`),
-  CONSTRAINT `inventario_ibfk_1` FOREIGN KEY (`id_insumo`) REFERENCES `insumos` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `numero_lote` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Dumping data for table `inventario`
+-- Volcado de datos para la tabla `inventario`
 --
 
-LOCK TABLES `inventario` WRITE;
-/*!40000 ALTER TABLE `inventario` DISABLE KEYS */;
-INSERT INTO `inventario` VALUES (11,2,10,20,'2025-04-25',5844668),(12,1,11,20,'2025-04-15',5844668);
-/*!40000 ALTER TABLE `inventario` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `inventario` (`id`, `id_insumo`, `id_insumo_hospitalizacion`, `cantidad`, `fecha_vencimiento`, `numero_lote`) VALUES
+(11, 2, 10, 20, '2025-04-25', 5844668),
+(12, 1, 11, 20, '2025-04-15', 5844668);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `metodos_pago`
+-- Estructura de tabla para la tabla `metodos_pago`
 --
 
-DROP TABLE IF EXISTS `metodos_pago`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `metodos_pago` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL,
   `nombre` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `descripcion` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `descripcion` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `metodos_pago`
+-- Volcado de datos para la tabla `metodos_pago`
 --
 
-LOCK TABLES `metodos_pago` WRITE;
-/*!40000 ALTER TABLE `metodos_pago` DISABLE KEYS */;
-INSERT INTO `metodos_pago` VALUES (1,'efectivo','descripcion1'),(2,'transferencia','descripcion2');
-/*!40000 ALTER TABLE `metodos_pago` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `metodos_pago` (`id`, `nombre`, `descripcion`) VALUES
+(1, 'efectivo', 'descripcion1'),
+(2, 'transferencia', 'descripcion2');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `pacientes`
+-- Estructura de tabla para la tabla `pacientes`
 --
 
-DROP TABLE IF EXISTS `pacientes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pacientes` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL,
   `cedula` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `nombre` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `apellido` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `telefono` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `direccion` text CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `f_n` date NOT NULL,
-  `estado` varchar(5) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `cedula` (`cedula`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `estado` varchar(5) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `pacientes`
+-- Volcado de datos para la tabla `pacientes`
 --
 
-LOCK TABLES `pacientes` WRITE;
-/*!40000 ALTER TABLE `pacientes` DISABLE KEYS */;
-INSERT INTO `pacientes` VALUES (1,'30554145','JGP','Bastias','04121338031','','2025-04-15','');
-/*!40000 ALTER TABLE `pacientes` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `pacientes` (`id`, `cedula`, `nombre`, `apellido`, `telefono`, `direccion`, `f_n`, `estado`) VALUES
+(1, '30554145', 'JGP', 'Bastias', '04121338031', '', '2025-04-15', '');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `pagos`
+-- Estructura de tabla para la tabla `pagos`
 --
 
-DROP TABLE IF EXISTS `pagos`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `pagos` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_metodo_pago` int NOT NULL,
-  `id_factura` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_metodo_pago` int(11) NOT NULL,
+  `id_factura` int(11) NOT NULL,
   `referencia` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci DEFAULT NULL,
-  `monto` float(12,2) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_metodo_pago` (`id_metodo_pago`),
-  CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_metodo_pago`) REFERENCES `metodos_pago` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `pagos`
---
-
-LOCK TABLES `pagos` WRITE;
-/*!40000 ALTER TABLE `pagos` DISABLE KEYS */;
-INSERT INTO `pagos` VALUES (9,2,9,'264684684',52.00),(10,1,9,'21010',20.00);
-/*!40000 ALTER TABLE `pagos` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `patologia_paciente`
---
-
-DROP TABLE IF EXISTS `patologia_paciente`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `patologia_paciente` (
-  `id` int NOT NULL,
-  `id_paciente` int DEFAULT NULL,
-  `id_patologia` int DEFAULT NULL,
-  `fecha_registro` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_paciente` (`id_paciente`),
-  KEY `id_patologia` (`id_patologia`),
-  CONSTRAINT `patologia_paciente_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `patologia_paciente_ibfk_2` FOREIGN KEY (`id_patologia`) REFERENCES `patologias` (`id`) ON UPDATE CASCADE
+  `monto` float(12,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `patologia_paciente`
+-- Volcado de datos para la tabla `pagos`
 --
 
-LOCK TABLES `patologia_paciente` WRITE;
-/*!40000 ALTER TABLE `patologia_paciente` DISABLE KEYS */;
-/*!40000 ALTER TABLE `patologia_paciente` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `pagos` (`id`, `id_metodo_pago`, `id_factura`, `referencia`, `monto`) VALUES
+(9, 2, 9, '264684684', 52.00),
+(10, 1, 9, '21010', 20.00);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `patologias`
+-- Estructura de tabla para la tabla `patologias`
 --
 
-DROP TABLE IF EXISTS `patologias`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `patologias` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `nombre` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `estado` varchar(12) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  `estado` varchar(12) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+
+-- --------------------------------------------------------
 
 --
--- Dumping data for table `patologias`
+-- Estructura de tabla para la tabla `patologia_paciente`
 --
 
-LOCK TABLES `patologias` WRITE;
-/*!40000 ALTER TABLE `patologias` DISABLE KEYS */;
-/*!40000 ALTER TABLE `patologias` ENABLE KEYS */;
-UNLOCK TABLES;
+CREATE TABLE `patologia_paciente` (
+  `id` int(11) NOT NULL,
+  `id_paciente` int(11) DEFAULT NULL,
+  `id_patologia` int(11) DEFAULT NULL,
+  `fecha_registro` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `personal`
+-- Estructura de tabla para la tabla `personal`
 --
 
-DROP TABLE IF EXISTS `personal`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `personal` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int(11) NOT NULL,
   `cedula` varchar(20) NOT NULL,
   `nombre` varchar(25) NOT NULL,
   `apellido` varchar(25) NOT NULL,
-  `telefono` varchar(20) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `cedula` (`cedula`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `telefono` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Dumping data for table `personal`
+-- Volcado de datos para la tabla `personal`
 --
 
-LOCK TABLES `personal` WRITE;
-/*!40000 ALTER TABLE `personal` DISABLE KEYS */;
-INSERT INTO `personal` VALUES (1,'30218990','JGP','PS','04121338031');
-/*!40000 ALTER TABLE `personal` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `personal` (`id`, `cedula`, `nombre`, `apellido`, `telefono`) VALUES
+(1, '30218990', 'JGP', 'PS', '04121338031');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `proveedores`
+-- Estructura de tabla para la tabla `proveedores`
 --
 
-DROP TABLE IF EXISTS `proveedores`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `proveedores` (
-  `id` int NOT NULL,
+  `id` int(11) NOT NULL,
   `nombre` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `rif` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `telefono` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  `email` varchar(40) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `direccion` text COLLATE utf8mb4_unicode_ci NOT NULL,
-  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`)
+  `email` varchar(40) NOT NULL,
+  `direccion` text NOT NULL,
+  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `proveedores`
+-- Volcado de datos para la tabla `proveedores`
 --
 
-LOCK TABLES `proveedores` WRITE;
-/*!40000 ALTER TABLE `proveedores` DISABLE KEYS */;
-INSERT INTO `proveedores` VALUES (1,'nombre 1','30087582','04126745523','email@gmail.com','direccion 1','0');
-/*!40000 ALTER TABLE `proveedores` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `proveedores` (`id`, `nombre`, `rif`, `telefono`, `email`, `direccion`, `estado`) VALUES
+(1, 'nombre 1', '30087582', '04126745523', 'email@gmail.com', 'direccion 1', '0');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `servicio_medico`
+-- Estructura de tabla para la tabla `servicio_medico`
 --
 
-DROP TABLE IF EXISTS `servicio_medico`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `servicio_medico` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `id_especialidad` int NOT NULL,
-  `id_doctor` int NOT NULL,
+  `id` int(11) NOT NULL,
+  `id_especialidad` int(11) NOT NULL,
+  `id_doctor` int(11) NOT NULL,
   `precio` float(12,2) NOT NULL,
-  `estado` varchar(25) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `id_especialidad` (`id_especialidad`),
-  KEY `id_doctor` (`id_doctor`),
-  CONSTRAINT `servicio_medico_ibfk_1` FOREIGN KEY (`id_especialidad`) REFERENCES `especialidades` (`id`) ON UPDATE CASCADE,
-  CONSTRAINT `servicio_medico_ibfk_2` FOREIGN KEY (`id_doctor`) REFERENCES `personal` (`id`) ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `servicio_medico`
---
-
-LOCK TABLES `servicio_medico` WRITE;
-/*!40000 ALTER TABLE `servicio_medico` DISABLE KEYS */;
-INSERT INTO `servicio_medico` VALUES (1,1,1,10.00,'ACT');
-/*!40000 ALTER TABLE `servicio_medico` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sintomas`
---
-
-DROP TABLE IF EXISTS `sintomas`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sintomas` (
-  `id_sintomas` int NOT NULL,
-  `nombre` varchar(25) COLLATE utf8mb4_general_ci NOT NULL,
-  `estado` varchar(5) COLLATE utf8mb4_general_ci NOT NULL,
-  PRIMARY KEY (`id_sintomas`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `sintomas`
---
-
-LOCK TABLES `sintomas` WRITE;
-/*!40000 ALTER TABLE `sintomas` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sintomas` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `usuarios`
---
-
-DROP TABLE IF EXISTS `usuarios`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `usuarios` (
-  `id` int NOT NULL,
-  `nombre` varchar(100) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL,
-  `correo` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `password` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL,
-  `estado` varchar(25) CHARACTER SET utf8mb3 COLLATE utf8mb3_bin NOT NULL,
-  PRIMARY KEY (`id`)
+  `estado` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `usuarios`
+-- Volcado de datos para la tabla `servicio_medico`
 --
 
-LOCK TABLES `usuarios` WRITE;
-/*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-/*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+INSERT INTO `servicio_medico` (`id`, `id_especialidad`, `id_doctor`, `precio`, `estado`) VALUES
+(1, 1, 1, 10.00, 1),
+(2, 101, 1, 500.00, 1);
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `sintomas`
+--
+
+CREATE TABLE `sintomas` (
+  `id_sintomas` int(11) NOT NULL,
+  `nombre` varchar(25) NOT NULL,
+  `estado` varchar(5) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuarios`
+--
+
+CREATE TABLE `usuarios` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(100) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `usuario` varchar(100) NOT NULL,
+  `password` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `estado` varchar(25) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `usuarios`
+--
+
+INSERT INTO `usuarios` (`id`, `nombre`, `usuario`, `password`, `estado`) VALUES
+(0, 'JJ', 'aa', '1', '');
+
+--
+-- Índices para tablas volcadas
+--
+
+--
+-- Indices de la tabla `citas`
+--
+ALTER TABLE `citas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_detalles_servicio` (`id_servicio_medico`),
+  ADD KEY `id_paciente` (`id_paciente`);
+
+--
+-- Indices de la tabla `control`
+--
+ALTER TABLE `control`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_cita` (`id_cita`) USING BTREE;
+
+--
+-- Indices de la tabla `detalles_entrada`
+--
+ALTER TABLE `detalles_entrada`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_insumo` (`id_insumo`,`id_entrada`),
+  ADD KEY `detalles_entrada_ibfk_1` (`id_entrada`);
+
+--
+-- Indices de la tabla `detalles_factura`
+--
+ALTER TABLE `detalles_factura`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `detalles_factura_ibfk_1` (`id_factura`),
+  ADD KEY `inventario_idx` (`id_inventario`);
+
+--
+-- Indices de la tabla `entradas`
+--
+ALTER TABLE `entradas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_proveedor` (`id_proveedor`);
+
+--
+-- Indices de la tabla `especialidades`
+--
+ALTER TABLE `especialidades`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_paciente` (`id_paciente`);
+
+--
+-- Indices de la tabla `horario`
+--
+ALTER TABLE `horario`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `horario_personal`
+--
+ALTER TABLE `horario_personal`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_doctor` (`id_personal`),
+  ADD KEY `id_horario` (`id_horario`);
+
+--
+-- Indices de la tabla `hospitalizacion`
+--
+ALTER TABLE `hospitalizacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_control` (`id_control`);
+
+--
+-- Indices de la tabla `insumos`
+--
+ALTER TABLE `insumos`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `insumo_hospitalizacion`
+--
+ALTER TABLE `insumo_hospitalizacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_hospitalizacion` (`id_hospitalizacion`),
+  ADD KEY `id_insumo` (`id_insumo`);
+
+--
+-- Indices de la tabla `inventario`
+--
+ALTER TABLE `inventario`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_insumo` (`id_insumo`),
+  ADD KEY `insumos_hosp_idx` (`id_insumo_hospitalizacion`);
+
+--
+-- Indices de la tabla `metodos_pago`
+--
+ALTER TABLE `metodos_pago`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `pacientes`
+--
+ALTER TABLE `pacientes`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cedula` (`cedula`);
+
+--
+-- Indices de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_metodo_pago` (`id_metodo_pago`);
+
+--
+-- Indices de la tabla `patologias`
+--
+ALTER TABLE `patologias`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `patologia_paciente`
+--
+ALTER TABLE `patologia_paciente`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_paciente` (`id_paciente`),
+  ADD KEY `id_patologia` (`id_patologia`);
+
+--
+-- Indices de la tabla `personal`
+--
+ALTER TABLE `personal`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `cedula` (`cedula`);
+
+--
+-- Indices de la tabla `proveedores`
+--
+ALTER TABLE `proveedores`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indices de la tabla `servicio_medico`
+--
+ALTER TABLE `servicio_medico`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `id_especialidad` (`id_especialidad`),
+  ADD KEY `id_doctor` (`id_doctor`);
+
+--
+-- Indices de la tabla `sintomas`
+--
+ALTER TABLE `sintomas`
+  ADD PRIMARY KEY (`id_sintomas`);
+
+--
+-- Indices de la tabla `usuarios`
+--
+ALTER TABLE `usuarios`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT de las tablas volcadas
+--
+
+--
+-- AUTO_INCREMENT de la tabla `citas`
+--
+ALTER TABLE `citas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT de la tabla `control`
+--
+ALTER TABLE `control`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT de la tabla `detalles_entrada`
+--
+ALTER TABLE `detalles_entrada`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT de la tabla `detalles_factura`
+--
+ALTER TABLE `detalles_factura`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `entradas`
+--
+ALTER TABLE `entradas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
+-- AUTO_INCREMENT de la tabla `especialidades`
+--
+ALTER TABLE `especialidades`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+
+--
+-- AUTO_INCREMENT de la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT de la tabla `horario`
+--
+ALTER TABLE `horario`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `hospitalizacion`
+--
+ALTER TABLE `hospitalizacion`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT de la tabla `insumo_hospitalizacion`
+--
+ALTER TABLE `insumo_hospitalizacion`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT de la tabla `inventario`
+--
+ALTER TABLE `inventario`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT de la tabla `metodos_pago`
+--
+ALTER TABLE `metodos_pago`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT de la tabla `pacientes`
+--
+ALTER TABLE `pacientes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT de la tabla `personal`
+--
+ALTER TABLE `personal`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT de la tabla `servicio_medico`
+--
+ALTER TABLE `servicio_medico`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- Restricciones para tablas volcadas
+--
+
+--
+-- Filtros para la tabla `citas`
+--
+ALTER TABLE `citas`
+  ADD CONSTRAINT `citas_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `citas_ibfk_2` FOREIGN KEY (`id_servicio_medico`) REFERENCES `servicio_medico` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `control`
+--
+ALTER TABLE `control`
+  ADD CONSTRAINT `control_ibfk_1` FOREIGN KEY (`id_cita`) REFERENCES `citas` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `detalles_entrada`
+--
+ALTER TABLE `detalles_entrada`
+  ADD CONSTRAINT `detalles_entrada_ibfk_1` FOREIGN KEY (`id_entrada`) REFERENCES `entradas` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `detalles_entrada_ibfk_2` FOREIGN KEY (`id_insumo`) REFERENCES `insumos` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `detalles_factura`
+--
+ALTER TABLE `detalles_factura`
+  ADD CONSTRAINT `detalles_factura_ibfk_1` FOREIGN KEY (`id_factura`) REFERENCES `facturas` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `inventario` FOREIGN KEY (`id_inventario`) REFERENCES `inventario` (`id`);
+
+--
+-- Filtros para la tabla `entradas`
+--
+ALTER TABLE `entradas`
+  ADD CONSTRAINT `entradas_ibfk_1` FOREIGN KEY (`id_proveedor`) REFERENCES `proveedores` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `facturas`
+--
+ALTER TABLE `facturas`
+  ADD CONSTRAINT `facturas_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `horario_personal`
+--
+ALTER TABLE `horario_personal`
+  ADD CONSTRAINT `horario_personal_ibfk_1` FOREIGN KEY (`id_horario`) REFERENCES `horario` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `horario_personal_ibfk_2` FOREIGN KEY (`id_personal`) REFERENCES `personal` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `hospitalizacion`
+--
+ALTER TABLE `hospitalizacion`
+  ADD CONSTRAINT `hospitalizacion_ibfk_1` FOREIGN KEY (`id_control`) REFERENCES `control` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `insumo_hospitalizacion`
+--
+ALTER TABLE `insumo_hospitalizacion`
+  ADD CONSTRAINT `insumo_hospitalizacion_ibfk_1` FOREIGN KEY (`id_hospitalizacion`) REFERENCES `hospitalizacion` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `insumo_hospitalizacion_ibfk_2` FOREIGN KEY (`id_insumo`) REFERENCES `insumos` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `inventario`
+--
+ALTER TABLE `inventario`
+  ADD CONSTRAINT `insumos_hosp` FOREIGN KEY (`id_insumo_hospitalizacion`) REFERENCES `insumo_hospitalizacion` (`id`),
+  ADD CONSTRAINT `inventario_ibfk_1` FOREIGN KEY (`id_insumo`) REFERENCES `insumos` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `pagos`
+--
+ALTER TABLE `pagos`
+  ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`id_metodo_pago`) REFERENCES `metodos_pago` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `patologia_paciente`
+--
+ALTER TABLE `patologia_paciente`
+  ADD CONSTRAINT `patologia_paciente_ibfk_1` FOREIGN KEY (`id_paciente`) REFERENCES `pacientes` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `patologia_paciente_ibfk_2` FOREIGN KEY (`id_patologia`) REFERENCES `patologias` (`id`) ON UPDATE CASCADE;
+
+--
+-- Filtros para la tabla `servicio_medico`
+--
+ALTER TABLE `servicio_medico`
+  ADD CONSTRAINT `servicio_medico_ibfk_1` FOREIGN KEY (`id_especialidad`) REFERENCES `especialidades` (`id`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `servicio_medico_ibfk_2` FOREIGN KEY (`id_doctor`) REFERENCES `personal` (`id`) ON UPDATE CASCADE;
+COMMIT;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-04-23 12:47:51
