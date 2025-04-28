@@ -19,7 +19,28 @@ class C_Citas
         if (isset($_GET["id"])) {
             $citas->setId($_GET["id"]);
         }
+        if (isset($_GET["id_personal"])) {
+            $citas->setIdPersonal($_GET["id_personal"]);
+        }
+        if (isset($_GET["fecha"])) {
+            $citas->setFecha($_GET["fecha"]);
+        }
         $resultado = $citas->getCitas();
+        echo json_encode($resultado);
+    }
+    public function BuscarCitasPast()
+    {
+        $citas = new Citas();
+        if (isset($_GET["id"])) {
+            $citas->setId($_GET["id"]);
+        }
+        if (isset($_GET["id_personal"])) {
+            $citas->setIdPersonal($_GET["id_personal"]);
+        }
+        if (isset($_GET["fecha"])) {
+            $citas->setFecha($_GET["fecha"]);
+        }
+        $resultado = $citas->getCitasPast();
         echo json_encode($resultado);
     }
 
