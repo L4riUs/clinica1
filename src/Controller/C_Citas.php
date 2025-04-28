@@ -32,7 +32,7 @@ class C_Citas
             $id_personal = $_POST["id_personal"];
             $fecha = $_POST["fecha"];
             $emergencia = $_POST["emergencia"] == "si" ? 1 : 0;
-            $estado = 1;
+            $estado = $_POST["emergencia"] == "si" ? 1 : 0;;
 
             $cita = new Citas();
             $cita->setIdPaciente($id_paciente);
