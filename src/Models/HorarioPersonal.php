@@ -74,7 +74,6 @@ class HorarioPersonal extends Conexion
         $timestamp = $dt->getTimestamp();
         $rawDia = strftime('%A', $timestamp);
         $dia = ucfirst(mb_strtolower(utf8_encode($rawDia)));
-        echo $dia;
         $hora      = $dt->format('H:i:s');
         $horarios  = $this->getPorPersonal($id_personal);
         foreach ($horarios as $h) {
@@ -84,8 +83,10 @@ class HorarioPersonal extends Conexion
                 && $hora <= $h['hora_salida']
             ) {
                 return true;
+                echo "Se";
             }
         }
         return false;
+        echo "Nose";
     }
 }

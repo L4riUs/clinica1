@@ -3,7 +3,8 @@
 namespace Proyecto\Clinica\Controller;
 
 use Proyecto\Clinica\Models\Citas;
-
+use Proyecto\Clinica\Models\HorarioPersonal;
+use DateTime;
 class C_Citas
 {
     public function Index()
@@ -62,7 +63,13 @@ class C_Citas
             $cita->setFecha($fecha);
             $cita->setEmergencia($emergencia);
             $cita->setEstado($estado);
-            $cita->insertar();
+            $dt = new DateTime();
+            if ((new HorarioPersonal())->estaDisponible($_POST['id_personal'], $dt)) {
+                $cita->insertar();
+                ;
+            } else {
+                echo json_encode(["status" => "error", "message" => "registro no permitido por conflicto de horario"]);
+            }
 
             echo json_encode(["status" => "success", "message" => "Cita guardada correctamente"]);
         } else {
