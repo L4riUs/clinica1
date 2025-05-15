@@ -20,4 +20,18 @@ class C_Entradas
             throw $e;
         }
     }
+
+    public function getEntradas()
+    {
+        $entradas = new Entradas(); // Llama al método getEntradas
+        $entradasFilter = $entradas->getEntradas($_POST);
+        echo json_encode($entradasFilter);
+    }
+
+    public function getDetalles()
+    {
+        $entrada = new DetallesEntrada();
+        $result = $entrada->getDetalles($_POST);
+        echo json_encode($result);
+    }
 }

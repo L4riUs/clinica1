@@ -5,6 +5,7 @@ namespace Proyecto\Clinica\Controller;
 use Proyecto\Clinica\Models\Citas;
 use Proyecto\Clinica\Models\HorarioPersonal;
 use DateTime;
+
 class C_Citas
 {
     public function Index()
@@ -48,7 +49,6 @@ class C_Citas
     public function GuardarCitas()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            print_r($_POST);
             $id_paciente = $_POST["id_paciente"];
             $id_servicio = $_POST["id_servicio_medico"];
             $id_personal = $_POST["id_personal"];
@@ -63,15 +63,16 @@ class C_Citas
             $cita->setFecha($fecha);
             $cita->setEmergencia($emergencia);
             $cita->setEstado($estado);
-            $dt = new DateTime();
-            if ((new HorarioPersonal())->estaDisponible($_POST['id_personal'], $dt)) {
+            date_default_timezone_set('America/Caracas'); // configurar la zona horaria a venezuela
+            $fechaActual = new DateTime(); // obtener la fecha y hora actual
+            $fechaActual->format('Y-m-d H:i:s'); // formatear la fecha y hora en el formato deseado
+
+            if ((new HorarioPersonal())->estaDisponible($_POST['id_personal'], $fechaActual)) {
                 $cita->insertar();
-                ;
+                echo json_encode(["status" => "success", "message" => "Cita guardada correctamente"]);
             } else {
                 echo json_encode(["status" => "error", "message" => "registro no permitido por conflicto de horario"]);
             }
-
-            echo json_encode(["status" => "success", "message" => "Cita guardada correctamente"]);
         } else {
             echo json_encode(["status" => "error", "message" => "Método no permitido"]);
         }

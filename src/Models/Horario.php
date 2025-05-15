@@ -35,7 +35,11 @@ class Horario extends Conexion {
     }
 
     public function getTodos() {
-        $rows = $this->conexion->query("SELECT * FROM horario")->fetchAll();
+        $rows = $this->conexion->query('
+        SELECT hp.*, h.dias_laborables
+          FROM horario_personal hp
+          JOIN horario h ON hp.id_horario = h.id
+        ')->fetchAll();
         foreach ($rows as &$r) {
             $r['dias_laborables'] = self::stringToDias($r['dias_laborables']);
         }

@@ -56,6 +56,12 @@ class Entradas extends Conexion {
         if (!empty($filtro['id_proveedor'])) {
             $sql .= " AND id_proveedor = :id_proveedor";
             $params[':id_proveedor'] = $filtro['id_proveedor'];
+        } elseif (!empty($filtro['numero_de_lote'])) {
+            $sql .= " AND numero_de_lote = :numero_de_lote";
+            $params[':numero_de_lote'] = $filtro['numero_de_lote'];
+        } elseif (!empty($filtro['id'])) {
+            $sql .= " AND id = :id";
+            $params[':id'] = $filtro['id'];
         }
         $stmt = $this->conexion->prepare($sql);
         $stmt->execute($params);
